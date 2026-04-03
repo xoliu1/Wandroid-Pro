@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notes_app/utils/animations.dart';
 import 'package:notes_app/utils/functions.dart';
+import 'package:notes_app/utils/mcm_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../gen/assets.gen.dart';
@@ -39,76 +40,113 @@ class _SetupState extends State<Setup> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: MCMColors.background(context),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(
-                  height: 80,
-                ),
+                const SizedBox(height: 60),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 100),
                   child: SizedBox(
-                    height: 250,
+                    height: 220,
                     child: Assets.images.welcome.image(),
                   ),
                 ),
+                const SizedBox(height: 16),
+                // MCM 装饰元素
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 200),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 8, height: 8,
+                        decoration: const BoxDecoration(
+                          color: MCMColors.orange,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 32, height: 4,
+                        decoration: BoxDecoration(
+                          color: MCMColors.mustard,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 8, height: 8,
+                        decoration: const BoxDecoration(
+                          color: MCMColors.olive,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
                 FadeSlideIn(
                   delay: const Duration(milliseconds: 300),
-                  child: const Text(
-                    'Welcome!',
+                  child: Text(
+                    'WELCOME',
                     style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: MCMColors.primaryText(context),
+                      letterSpacing: 3.0,
                     ),
                   ),
                 ),
-                const SizedBox(height: 80),
-                const Text(
-                  'Please enter your name',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                const SizedBox(height: 60),
+                Text(
+                  'ENTER YOUR NAME',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: MCMColors.secondaryText(context),
+                    letterSpacing: 2.0,
+                  ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 SizedBox(
-                  height: 60,
+                  height: 56,
                   child: TextField(
                     controller: _nameController,
                     onChanged: (value) {
                       setState(() {});
                     },
+                    style: TextStyle(color: MCMColors.primaryText(context)),
                     decoration: InputDecoration(
                       hintText: '输入你的名字',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      hintStyle: TextStyle(color: MCMColors.secondaryText(context).withOpacity(0.5)),
                     ),
                   ),
                 ),
-                const SizedBox(height: 15),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF896F),
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: (nameValid(_nameController.text)
+                        ? () {
+                            prefs.setString('name', _nameController.text.trim());
+                            prefs.setBool('isInitialized', true);
+                            widget.onContinue();
+                          }
+                        : null),
+                    child: const Text(
+                      'CONTINUE',
+                      style: TextStyle(
+                        letterSpacing: 2.0,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                  onPressed: (nameValid(_nameController.text)
-                      ? () {
-                          prefs.setString('name', _nameController.text.trim());
-                          prefs.setBool('isInitialized', true);
-                          widget.onContinue();
-                        }
-                      : null),
-                  child: const Text(
-                    'Continue',
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -143,80 +181,210 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final textColor = MCMColors.primaryText(context);
+    final subColor = MCMColors.secondaryText(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: AutofillGroup(  // 包裹 AutofillGroup，让两个字段一起填充
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FadeSlideIn(
-                delay: const Duration(milliseconds: 100),
-                child: TextField(
-                autofillHints: const [AutofillHints.username],
-                controller: _usernameController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(),
+      backgroundColor: MCMColors.background(context),
+      body: SafeArea(
+        child: AutofillGroup(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 60),
+                // MCM 返回按钮
+                if (Navigator.of(context).canPop())
+                  MCMBackButton(),
+                const SizedBox(height: 32),
+                // MCM 装饰几何元素
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 100),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8, height: 8,
+                        decoration: const BoxDecoration(
+                          color: MCMColors.orange,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 24, height: 4,
+                        decoration: BoxDecoration(
+                          color: MCMColors.mustard,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                onEditingComplete: () => TextInput.finishAutofillContext(),  // 完成自动填充
-              ),
-              ),
-              const SizedBox(height: 20),
-              FadeSlideIn(
-                delay: const Duration(milliseconds: 200),
-                child: TextField(
-                autofillHints: const [AutofillHints.password],
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
-                onEditingComplete: () => TextInput.finishAutofillContext(),  // 完成自动填充
-              ),
-              ),
-              const SizedBox(height: 30),
-              FadeSlideIn(
-                delay: const Duration(milliseconds: 300),
-                child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading
-                      ? null
-                      : () async {
-                          setState(() {
-                            _isLoading = true;
-                          });
-                          if (await login(_usernameController.text,
-                              _passwordController.text)) {
-                            widget.onSuccess?.call();
-                          }
-                          setState(() {
-                            _isLoading = false;
-                          });
-                        },
-                  child: _isLoading
-                      ? const CircularProgressIndicator()
-                      : const Text('Login'),
-                ),
-              ),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (_) => const RegisterPage(),
+                const SizedBox(height: 12),
+                // 大标题
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 200),
+                  child: Text(
+                    'LOGIN',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      color: textColor,
+                      letterSpacing: 2.0,
+                      height: 1.0,
                     ),
-                  );
-                },
-                child: const Text('没有账号？去注册'),
-              ),
-            ],
+                  ),
+                ),
+                const SizedBox(height: 6),
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 250),
+                  child: Text(
+                    '登录你的 WanAndroid 账号',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: subColor,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 48),
+                // 用户名输入
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 300),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'USERNAME',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: subColor,
+                          letterSpacing: 2.0,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        autofillHints: const [AutofillHints.username],
+                        controller: _usernameController,
+                        autofocus: true,
+                        style: TextStyle(color: textColor, fontSize: 16),
+                        decoration: const InputDecoration(
+                          hintText: '请输入用户名',
+                          prefixIcon: Icon(CupertinoIcons.person, size: 20),
+                        ),
+                        onEditingComplete: () => TextInput.finishAutofillContext(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // 密码输入
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 400),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'PASSWORD',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: subColor,
+                          letterSpacing: 2.0,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        autofillHints: const [AutofillHints.password],
+                        controller: _passwordController,
+                        obscureText: true,
+                        style: TextStyle(color: textColor, fontSize: 16),
+                        decoration: const InputDecoration(
+                          hintText: '请输入密码',
+                          prefixIcon: Icon(CupertinoIcons.lock, size: 20),
+                        ),
+                        onEditingComplete: () => TextInput.finishAutofillContext(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 40),
+                // 登录按钮
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 500),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              setState(() {
+                                _isLoading = true;
+                              });
+                              if (await login(_usernameController.text,
+                                  _passwordController.text)) {
+                                widget.onSuccess?.call();
+                              }
+                              setState(() {
+                                _isLoading = false;
+                              });
+                            },
+                      child: _isLoading
+                          ? SizedBox(
+                              width: 24, height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'LOGIN',
+                              style: TextStyle(
+                                letterSpacing: 2.0,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // 注册链接
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 550),
+                  child: Center(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (_) => const RegisterPage(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        '没有账号？去注册',
+                        style: TextStyle(
+                          color: MCMColors.orange,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
+                // 底部 MCM 装饰
+                Center(
+                  child: MCMStarburst(
+                    size: 40,
+                    color: MCMColors.mustard.withOpacity(0.2),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -244,18 +412,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           completer.complete(false);
         }
 
-        // UI层错误处理
+        // MCM 风格错误对话框
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('登录失败'),
-            content: Text(errorMsg),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('确定'),
-              ),
-            ],
+          builder: (context) => MCMConfirmDialog(
+            icon: Icons.error_outline_rounded,
+            iconColor: MCMColors.coral,
+            title: '登录失败',
+            content: errorMsg,
+            cancelText: '',
+            confirmText: 'OK',
+            onConfirm: () {},
           ),
         );
       });

@@ -16,6 +16,7 @@ import 'package:notes_app/model/note.dart';
 import 'package:notes_app/providers/note_provider.dart';
 import 'package:notes_app/utils/animations.dart';
 import 'package:notes_app/utils/app_colors.dart';
+import 'package:notes_app/utils/mcm_widget.dart';
 import 'package:notes_app/utils/functions.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -713,7 +714,7 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
             Icon(
               CupertinoIcons.exclamationmark_circle,
               size: 64,
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
+              color: MCMColors.secondaryText(context),
             ),
             const SizedBox(height: 16),
             Text(
@@ -721,7 +722,7 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
-                color: isDark ? Colors.white70 : Colors.black87,
+                color: MCMColors.primaryText(context),
               ),
             ),
             const SizedBox(height: 8),
@@ -729,7 +730,7 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
               '请前往设置配置 AI 服务后使用',
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? Colors.grey[500] : Colors.grey[600],
+                color: MCMColors.secondaryText(context),
               ),
             ),
             const SizedBox(height: 24),
@@ -1013,33 +1014,40 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
       child: Row(
         children: [
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
-                borderRadius: BorderRadius.circular(24),
+            child: TextField(
+              controller: _inputController,
+              focusNode: _focusNode,
+              enabled: !chatState.isLoading,
+              style: TextStyle(
+                fontSize: 15,
+                color: AppColors.primaryText(context),
               ),
-              child: TextField(
-                controller: _inputController,
-                focusNode: _focusNode,
-                enabled: !chatState.isLoading,
-                style: TextStyle(
+              decoration: InputDecoration(
+                hintText: '问我任何问题...',
+                hintStyle: TextStyle(
+                  color: AppColors.secondaryText(context),
                   fontSize: 15,
-                  color: AppColors.primaryText(context),
                 ),
-                decoration: InputDecoration(
-                  hintText: '问我任何问题...',
-                  hintStyle: TextStyle(
-                    color: AppColors.secondaryText(context),
-                    fontSize: 15,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
+                filled: true,
+                fillColor: MCMColors.background(context),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
                 ),
-                maxLines: null,
-                textInputAction: TextInputAction.send,
-                onSubmitted: _sendMessage,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                isDense: true,
               ),
+              maxLines: null,
+              textInputAction: TextInputAction.send,
+              onSubmitted: _sendMessage,
             ),
           ),
           const SizedBox(width: 12),
@@ -1231,12 +1239,12 @@ class _HistorySheetItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? primaryColor.withOpacity(0.08)
-              : (isDark ? const Color(0xFF2A2A2A) : Colors.white),
+              : MCMColors.card(context),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
                 ? primaryColor.withOpacity(0.3)
-                : (isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                : MCMColors.dividerColor(context),
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -1374,7 +1382,7 @@ class _PresetQuestionCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+        color: MCMColors.card(context),
         borderRadius: BorderRadius.circular(12),
         elevation: 0,
         child: InkWell(
@@ -1384,7 +1392,7 @@ class _PresetQuestionCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               border: Border.all(
-                color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                color: MCMColors.dividerColor(context),
                 width: 1,
               ),
               borderRadius: BorderRadius.circular(12),
@@ -1460,7 +1468,7 @@ class _MessageBubble extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isUser
                           ? Theme.of(context).primaryColor
-                          : (isDark ? const Color(0xFF2A2A2A) : Colors.grey[100]),
+                          : MCMColors.card(context),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     clipBehavior: Clip.hardEdge,
@@ -1526,7 +1534,7 @@ class _MessageBubble extends StatelessWidget {
       radius: 16,
       backgroundColor: isUser
           ? Theme.of(context).primaryColor
-          : (isDark ? Colors.grey[700] : Colors.grey[300]),
+          : MCMColors.dividerColor(context),
       child: Icon(
         isUser ? CupertinoIcons.person : CupertinoIcons.sparkles,
         size: 16,
@@ -1598,13 +1606,13 @@ class _MessageBubble extends StatelessWidget {
           fontFamily: 'monospace',
           backgroundColor: isUser
               ? Colors.black.withOpacity(0.15)
-              : (isDark ? Colors.grey[900]! : Colors.grey[200]!),
+              : MCMColors.dividerColor(context),
           color: textColor,
         ),
         codeblockDecoration: BoxDecoration(
           color: isUser
               ? Colors.black.withOpacity(0.15)
-              : (isDark ? Colors.grey[900]! : Colors.grey[200]!),
+              : MCMColors.dividerColor(context),
           borderRadius: BorderRadius.circular(8),
         ),
         codeblockPadding: const EdgeInsets.all(12),

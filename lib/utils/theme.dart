@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,6 +13,7 @@ class AccentColorPreset {
 }
 
 const List<AccentColorPreset> accentColorPresets = [
+  AccentColorPreset('MCM 橙红', Color(0xFFD97642)),   // Mid-Century Modern 主色
   AccentColorPreset('默认蓝', Color(0xFF2196F3)),
   AccentColorPreset('靛蓝', Color(0xFF3F51B5)),
   AccentColorPreset('青色', Color(0xFF00BCD4)),
@@ -27,8 +26,8 @@ const List<AccentColorPreset> accentColorPresets = [
   AccentColorPreset('蓝灰', Color(0xFF607D8B)),
 ];
 
-/// 默认强调色
-const Color defaultAccentColor = Color(0xFF2196F3);
+/// 默认强调色 — MCM 橙红
+const Color defaultAccentColor = Color(0xFFD97642);
 
 // ==================== 强调色 Provider ====================
 
@@ -117,123 +116,349 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   }
 }
 
+// ==================== MCM 色彩常量 ====================
+
+/// Mid-Century Modern 亮色调色板
+class _MCMLightPalette {
+  static const cream = Color(0xFFF5E6D3);
+  static const surface = Color(0xFFFAF0E6);
+  static const darkBrown = Color(0xFF2C2416);
+  static const walnut = Color(0xFF6B5D4F);
+  static const divider = Color(0xFFE8D5C0);
+  static const orange = Color(0xFFD97642);
+}
+
+/// Mid-Century Modern 暗色调色板
+class _MCMDarkPalette {
+  static const background = Color(0xFF2A1F14);
+  static const surface = Color(0xFF3A2D1F);
+  static const text = Color(0xFFF0DCC8);
+  static const walnut = Color(0xFFA08B78);
+  static const divider = Color(0xFF4A3828);
+  static const orange = Color(0xFFE08A52);
+}
+
 // ==================== 主题构建 ====================
 
-/// 构建亮色主题
+/// 构建亮色主题 — MCM 风格
 ThemeData buildLightTheme(Color seedColor, PageTransitionsTheme pageTransitionsTheme) {
   final colorScheme = ColorScheme.fromSeed(
     seedColor: seedColor,
     brightness: Brightness.light,
+    surface: _MCMLightPalette.cream,
+    onSurface: _MCMLightPalette.darkBrown,
+    onSurfaceVariant: _MCMLightPalette.walnut,
+    outlineVariant: _MCMLightPalette.divider,
+    surfaceContainerHighest: const Color(0xFFF0DCC8),
   );
 
   return ThemeData(
     brightness: Brightness.light,
     colorScheme: colorScheme,
-    scaffoldBackgroundColor: colorScheme.surface,
+    scaffoldBackgroundColor: _MCMLightPalette.cream,
+    canvasColor: _MCMLightPalette.surface,
+    cardColor: _MCMLightPalette.surface,
+    dividerColor: _MCMLightPalette.divider,
     appBarTheme: AppBarTheme(
-      backgroundColor: colorScheme.surface,
-      foregroundColor: colorScheme.onSurface,
+      backgroundColor: _MCMLightPalette.cream,
+      foregroundColor: _MCMLightPalette.darkBrown,
       elevation: 0,
-      scrolledUnderElevation: 0.5,
+      scrolledUnderElevation: 0,
+      centerTitle: true,
+      titleTextStyle: const TextStyle(
+        color: _MCMLightPalette.darkBrown,
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.5,
+      ),
+      iconTheme: const IconThemeData(color: _MCMLightPalette.darkBrown),
     ),
     cardTheme: CardThemeData(
-      color: colorScheme.surface,
+      color: _MCMLightPalette.surface,
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: _MCMLightPalette.divider, width: 1),
+      ),
     ),
-    dividerTheme: DividerThemeData(
-      color: colorScheme.outlineVariant,
+    dividerTheme: const DividerThemeData(
+      color: _MCMLightPalette.divider,
       thickness: 0.5,
     ),
     tabBarTheme: TabBarThemeData(
       labelColor: colorScheme.primary,
-      unselectedLabelColor: colorScheme.onSurfaceVariant,
+      unselectedLabelColor: _MCMLightPalette.walnut,
       indicatorColor: colorScheme.primary,
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: colorScheme.primary,
-      foregroundColor: colorScheme.onPrimary,
+      backgroundColor: _MCMLightPalette.orange,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: colorScheme.surfaceContainerHighest,
-      labelStyle: TextStyle(color: colorScheme.onSurface),
+      backgroundColor: const Color(0xFFF0DCC8),
+      labelStyle: const TextStyle(color: _MCMLightPalette.darkBrown),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      side: BorderSide(color: _MCMLightPalette.divider),
     ),
-    listTileTheme: ListTileThemeData(
-      iconColor: colorScheme.onSurfaceVariant,
+    listTileTheme: const ListTileThemeData(
+      iconColor: _MCMLightPalette.walnut,
+      textColor: _MCMLightPalette.darkBrown,
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: _MCMLightPalette.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: _MCMLightPalette.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: const Color(0xFFF0DCC8).withOpacity(0.5),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: _MCMLightPalette.divider),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: _MCMLightPalette.divider),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: _MCMLightPalette.orange, width: 2),
+      ),
+      hintStyle: TextStyle(color: _MCMLightPalette.walnut.withOpacity(0.6)),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _MCMLightPalette.orange,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        textStyle: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.0,
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: _MCMLightPalette.orange,
+        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+      ),
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return colorScheme.primary;
+          return _MCMLightPalette.orange;
         }
         return null;
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return colorScheme.primary.withOpacity(0.5);
+          return _MCMLightPalette.orange.withOpacity(0.4);
         }
         return null;
       }),
+    ),
+    textTheme: const TextTheme(
+      headlineLarge: TextStyle(
+        color: _MCMLightPalette.darkBrown,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -0.5,
+      ),
+      headlineMedium: TextStyle(
+        color: _MCMLightPalette.darkBrown,
+        fontWeight: FontWeight.w800,
+      ),
+      titleLarge: TextStyle(
+        color: _MCMLightPalette.darkBrown,
+        fontWeight: FontWeight.w700,
+      ),
+      titleMedium: TextStyle(
+        color: _MCMLightPalette.darkBrown,
+        fontWeight: FontWeight.w600,
+      ),
+      bodyLarge: TextStyle(color: _MCMLightPalette.darkBrown),
+      bodyMedium: TextStyle(color: _MCMLightPalette.darkBrown),
+      bodySmall: TextStyle(color: _MCMLightPalette.walnut),
+      labelLarge: TextStyle(
+        color: _MCMLightPalette.darkBrown,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+      ),
+      labelSmall: TextStyle(
+        color: _MCMLightPalette.walnut,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 1.5,
+      ),
     ),
     pageTransitionsTheme: pageTransitionsTheme,
   );
 }
 
-/// 构建暗色主题
+/// 构建暗色主题 — MCM 风格
 ThemeData buildDarkTheme(Color seedColor, PageTransitionsTheme pageTransitionsTheme) {
   final colorScheme = ColorScheme.fromSeed(
     seedColor: seedColor,
     brightness: Brightness.dark,
+    surface: _MCMDarkPalette.background,
+    onSurface: _MCMDarkPalette.text,
+    onSurfaceVariant: _MCMDarkPalette.walnut,
+    outlineVariant: _MCMDarkPalette.divider,
+    surfaceContainerHighest: const Color(0xFF4A3828),
   );
 
   return ThemeData(
     brightness: Brightness.dark,
     colorScheme: colorScheme,
-    scaffoldBackgroundColor: colorScheme.surface,
+    scaffoldBackgroundColor: _MCMDarkPalette.background,
+    canvasColor: _MCMDarkPalette.surface,
+    cardColor: _MCMDarkPalette.surface,
+    dividerColor: _MCMDarkPalette.divider,
     appBarTheme: AppBarTheme(
-      backgroundColor: colorScheme.surface,
-      foregroundColor: colorScheme.onSurface,
+      backgroundColor: _MCMDarkPalette.background,
+      foregroundColor: _MCMDarkPalette.text,
       elevation: 0,
-      scrolledUnderElevation: 0.5,
+      scrolledUnderElevation: 0,
+      centerTitle: true,
+      titleTextStyle: const TextStyle(
+        color: _MCMDarkPalette.text,
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.5,
+      ),
+      iconTheme: const IconThemeData(color: _MCMDarkPalette.text),
     ),
     cardTheme: CardThemeData(
-      color: colorScheme.surfaceContainer,
+      color: _MCMDarkPalette.surface,
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: _MCMDarkPalette.divider, width: 1),
+      ),
     ),
-    dividerTheme: DividerThemeData(
-      color: colorScheme.outlineVariant,
+    dividerTheme: const DividerThemeData(
+      color: _MCMDarkPalette.divider,
       thickness: 0.5,
     ),
     tabBarTheme: TabBarThemeData(
-      labelColor: colorScheme.primary,
-      unselectedLabelColor: colorScheme.onSurfaceVariant,
-      indicatorColor: colorScheme.primary,
+      labelColor: _MCMDarkPalette.orange,
+      unselectedLabelColor: _MCMDarkPalette.walnut,
+      indicatorColor: _MCMDarkPalette.orange,
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: colorScheme.primary,
-      foregroundColor: colorScheme.onPrimary,
+      backgroundColor: _MCMDarkPalette.orange,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: colorScheme.surfaceContainerHighest,
-      labelStyle: TextStyle(color: colorScheme.onSurface),
+      backgroundColor: const Color(0xFF4A3828),
+      labelStyle: const TextStyle(color: _MCMDarkPalette.text),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      side: BorderSide(color: _MCMDarkPalette.divider),
     ),
-    listTileTheme: ListTileThemeData(
-      iconColor: colorScheme.onSurfaceVariant,
+    listTileTheme: const ListTileThemeData(
+      iconColor: _MCMDarkPalette.walnut,
+      textColor: _MCMDarkPalette.text,
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: _MCMDarkPalette.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: _MCMDarkPalette.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: const Color(0xFF4A3828).withOpacity(0.5),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: _MCMDarkPalette.divider),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: _MCMDarkPalette.divider),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: _MCMDarkPalette.orange, width: 2),
+      ),
+      hintStyle: TextStyle(color: _MCMDarkPalette.walnut.withOpacity(0.6)),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _MCMDarkPalette.orange,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        textStyle: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.0,
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: _MCMDarkPalette.orange,
+        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+      ),
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return colorScheme.primary;
+          return _MCMDarkPalette.orange;
         }
         return null;
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return colorScheme.primary.withOpacity(0.5);
+          return _MCMDarkPalette.orange.withOpacity(0.4);
         }
         return null;
       }),
+    ),
+    textTheme: const TextTheme(
+      headlineLarge: TextStyle(
+        color: _MCMDarkPalette.text,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -0.5,
+      ),
+      headlineMedium: TextStyle(
+        color: _MCMDarkPalette.text,
+        fontWeight: FontWeight.w800,
+      ),
+      titleLarge: TextStyle(
+        color: _MCMDarkPalette.text,
+        fontWeight: FontWeight.w700,
+      ),
+      titleMedium: TextStyle(
+        color: _MCMDarkPalette.text,
+        fontWeight: FontWeight.w600,
+      ),
+      bodyLarge: TextStyle(color: _MCMDarkPalette.text),
+      bodyMedium: TextStyle(color: _MCMDarkPalette.text),
+      bodySmall: TextStyle(color: _MCMDarkPalette.walnut),
+      labelLarge: TextStyle(
+        color: _MCMDarkPalette.text,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+      ),
+      labelSmall: TextStyle(
+        color: _MCMDarkPalette.walnut,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 1.5,
+      ),
     ),
     pageTransitionsTheme: pageTransitionsTheme,
   );

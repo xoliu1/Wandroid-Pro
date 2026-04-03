@@ -9,6 +9,7 @@ import 'package:notes_app/providers/note_provider.dart';
 import '../models/article_content.dart';
 import '../models/chat_message.dart';
 import '../providers/ai_chat_provider.dart';
+import '../../utils/mcm_widget.dart';
 
 /// AI 对话 BottomSheet
 /// 从底部弹出的对话界面，替代浮窗设计
@@ -303,10 +304,10 @@ class _AIChatBottomSheetState extends ConsumerState<AIChatBottomSheet> {
         bottom: 12 + (keyboardHeight > 0 ? keyboardHeight : MediaQuery.of(context).padding.bottom),
       ),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[50],
+        color: MCMColors.card(context),
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+            color: MCMColors.dividerColor(context),
             width: 0.5,
           ),
         ),
@@ -315,38 +316,39 @@ class _AIChatBottomSheetState extends ConsumerState<AIChatBottomSheet> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 120),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
-                  width: 1,
-                ),
+            child: TextField(
+              controller: _inputController,
+              focusNode: _focusNode,
+              enabled: !chatState.isLoading,
+              maxLines: null,
+              style: TextStyle(
+                fontSize: 15,
+                color: MCMColors.primaryText(context),
               ),
-              child: TextField(
-                controller: _inputController,
-                focusNode: _focusNode,
-                enabled: !chatState.isLoading,
-                maxLines: null,
-                style: TextStyle(
+              decoration: InputDecoration(
+                hintText: '问我关于这篇文章的任何问题...',
+                hintStyle: TextStyle(
+                  color: MCMColors.secondaryText(context),
                   fontSize: 15,
-                  color: isDark ? Colors.white : Colors.black87,
                 ),
-                decoration: InputDecoration(
-                  hintText: '问我关于这篇文章的任何问题...',
-                  hintStyle: TextStyle(
-                    color: isDark ? Colors.grey[500] : Colors.grey[400],
-                    fontSize: 15,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                  isDense: true,
+                filled: true,
+                fillColor: MCMColors.background(context),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: MCMColors.dividerColor(context), width: 1),
                 ),
-                onSubmitted: _sendMessage,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: MCMColors.dividerColor(context), width: 1),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: MCMColors.dividerColor(context), width: 1),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                isDense: true,
               ),
+              onSubmitted: _sendMessage,
             ),
           ),
           const SizedBox(width: 12),

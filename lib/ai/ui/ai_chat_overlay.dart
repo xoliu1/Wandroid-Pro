@@ -7,6 +7,7 @@ import 'package:notes_app/providers/note_provider.dart';
 import '../models/article_content.dart';
 import '../models/chat_message.dart';
 import '../providers/ai_chat_provider.dart';
+import '../../utils/mcm_widget.dart';
 
 /// AI 聊天 Overlay 管理器
 @deprecated
@@ -340,7 +341,7 @@ class _AIChatContentState extends ConsumerState<_AIChatContent> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 16,
       ),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.grey[100],
+        color: MCMColors.card(context),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
       ),
       child: Row(
@@ -353,7 +354,7 @@ class _AIChatContentState extends ConsumerState<_AIChatContent> {
               decoration: InputDecoration(
                 hintText: '输入你的问题...',
                 filled: true,
-                fillColor: isDark ? Colors.grey[800] : Colors.white,
+                fillColor: MCMColors.background(context),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,

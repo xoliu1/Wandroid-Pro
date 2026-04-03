@@ -1,8 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:notes_app/model/project.dart';
 import 'package:notes_app/remote/CgiCollect.dart';
 import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:notes_app/utils/mcm_widget.dart';
 
 class WxArticleCard extends StatelessWidget {
   final ProjectArticle article;
@@ -16,100 +17,135 @@ class WxArticleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textColor = MCMColors.primaryText(context);
+    final subColor = MCMColors.secondaryText(context);
+    final cardBg = MCMColors.card(context);
+    final divColor = MCMColors.dividerColor(context);
+
     return PressableScale(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: AppColors.cardBackground(context),
-          borderRadius: BorderRadius.circular(12),
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: divColor, width: 1),
           boxShadow: [
-            AppColors.cardShadow(context),
+            BoxShadow(
+              color: MCMColors.darkBrown.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 标题
-              Text(
-                article.title,
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryText(context),
-                  height: 1.4,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              // 第一排：作者标签 + 时间
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // 作者胶囊标签
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: MCMColors.orange.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          CupertinoIcons.person_fill,
+                          size: 13,
+                          color: MCMColors.orange,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          article.author.isNotEmpty ? article.author : '匿名',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: MCMColors.orange,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // 时间
+                  Row(
+                    children: [
+                      Icon(
+                        CupertinoIcons.clock,
+                        size: 13,
+                        color: subColor.withOpacity(0.6),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        article.niceShareDate,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: subColor.withOpacity(0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              
               const SizedBox(height: 12),
-              
+              // 标题 — 左侧芥末黄竖线装饰
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      width: 3,
+                      decoration: BoxDecoration(
+                        color: MCMColors.mustard,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        article.title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: textColor,
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               // 描述（如果有）
               if (article.desc.isNotEmpty) ...[
+                const SizedBox(height: 10),
                 Text(
                   article.desc,
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.secondaryText(context),
-                    height: 1.3,
+                    color: subColor,
+                    height: 1.5,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 12),
               ],
-              
-              // 底部信息栏
+              const SizedBox(height: 10),
+              // 底部：收藏按钮
               Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  // 作者头像和名称
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: AppColors.avatarBackground(context),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        article.author.isNotEmpty ? article.author[0] : '?',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.avatarText(context),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  
-                  // 作者名称
-                  Text(
-                    article.author,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.secondaryText(context),
-                    ),
-                  ),
-                  
-                  const Spacer(),
-                  
-                  // 时间
-                  Text(
-                    article.niceShareDate,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.tertiaryText(context),
-                    ),
-                  ),
-                  
-                  const SizedBox(width: 12),
-                  
-                  // 收藏按钮（toggle，带心跳动画）
                   AnimatedFavoriteButton(
                     isFavorite: article.collect,
                     size: 18,
@@ -117,7 +153,8 @@ class WxArticleCard extends StatelessWidget {
                       final cgiCollect = CgiCollect();
                       bool result;
                       if (article.collect) {
-                        result = await cgiCollect.uncollectArticle(article.id);
+                        result =
+                            await cgiCollect.uncollectArticle(article.id);
                       } else {
                         result = await cgiCollect.collectArticle(article.id);
                       }
@@ -129,47 +166,6 @@ class WxArticleCard extends StatelessWidget {
                   ),
                 ],
               ),
-              
-              // 标签（如果有）
-              // if (article.tags.isNotEmpty) ...[
-              //   const SizedBox(height: 12),
-              //   Wrap(
-              //     spacing: 8,
-              //     runSpacing: 4,
-              //     children: article.tags.take(2).map((tag) {
-              //       return Container(
-              //         padding: const EdgeInsets.symmetric(
-              //           horizontal: 8,
-              //           vertical: 4,
-              //         ),
-              //         decoration: BoxDecoration(
-              //           color: CupertinoColors.systemGrey6,
-              //           borderRadius: BorderRadius.circular(6),
-              //         ),
-              //
-              //         child: Row(
-              //           mainAxisSize: MainAxisSize.min,
-              //           children: [
-              //             const Icon(
-              //               CupertinoIcons.tag_fill,
-              //               size: 12,
-              //               color: CupertinoColors.systemGrey2,
-              //             ),
-              //             const SizedBox(width: 4),
-              //             Text(
-              //               tag.name,
-              //               style: TextStyle(
-              //                 fontSize: 12,
-              //                 color: CupertinoColors.systemGrey2,
-              //                 fontWeight: FontWeight.w500,
-              //               ),
-              //             ),
-              //           ],
-              //         ),
-              //       );
-              //     }).toList(),
-              //   ),
-              // ],
             ],
           ),
         ),

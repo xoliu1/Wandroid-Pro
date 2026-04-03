@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:notes_app/utils/mcm_widget.dart';
 
 /// 平台工具类 - 用于创建跨平台自适应 UI
 /// 
@@ -295,35 +296,35 @@ void navigatePlatform(BuildContext context, Widget page) {
   }
 }
 
-/// 主题颜色扩展 - 统一使用主题颜色，支持暗夜模式
+/// 主题颜色扩展 - 统一使用 MCM 风格颜色，确保全局一致
 extension ThemeColors on BuildContext {
   ColorScheme get colors => Theme.of(this).colorScheme;
   TextTheme get textTheme => Theme.of(this).textTheme;
   
-  /// 主色
+  /// 主色（强调色，由用户选择）
   Color get primaryColor => colors.primary;
   
-  /// 表面色（背景）
-  Color get surfaceColor => colors.surface;
+  /// 表面色（背景）— MCM 米色/深棕
+  Color get surfaceColor => MCMColors.background(this);
   
-  /// 表面上的文字颜色
-  Color get onSurfaceColor => colors.onSurface;
+  /// 表面上的文字颜色 — MCM 深棕/暗色文字
+  Color get onSurfaceColor => MCMColors.primaryText(this);
   
-  /// 卡片/容器背景色
-  Color get containerColor => colors.surfaceContainerHighest;
+  /// 卡片/容器背景色 — MCM 亚麻白/暗色卡片
+  Color get containerColor => MCMColors.card(this);
   
-  /// 错误色
-  Color get errorColor => colors.error;
+  /// 错误色 — MCM 珊瑚粉
+  Color get errorColor => MCMColors.coral;
   
-  /// 成功色（自定义）
-  Color get successColor => Colors.green;
+  /// 成功色 — MCM 橄榄绿
+  Color get successColor => MCMColors.olive;
   
-  /// 警告色（自定义）
-  Color get warningColor => Colors.orange;
+  /// 警告色 — MCM 芥末黄
+  Color get warningColor => MCMColors.mustard;
   
-  /// 次要文字颜色
-  Color get secondaryTextColor => colors.onSurfaceVariant;
+  /// 次要文字颜色 — MCM 胡桃木
+  Color get secondaryTextColor => MCMColors.secondaryText(this);
   
-  /// 分割线颜色
-  Color get dividerColor => colors.outlineVariant;
+  /// 分割线颜色 — MCM 分割线
+  Color get dividerColor => MCMColors.dividerColor(this);
 }

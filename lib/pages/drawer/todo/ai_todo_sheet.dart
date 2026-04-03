@@ -7,6 +7,7 @@ import 'package:notes_app/model/Todo.dart';
 import 'package:notes_app/providers/task_provider.dart';
 import 'package:notes_app/remote/CgiTodo.dart';
 import 'package:notes_app/utils/app_colors.dart';
+import 'package:notes_app/utils/mcm_widget.dart';
 import 'package:toastification/toastification.dart';
 
 /// AI TODO 智能助手 BottomSheet
@@ -194,13 +195,14 @@ class _AITodoSheetState extends ConsumerState<AITodoSheet> {
   }
 
   Widget _buildModeSelector(bool isDark) {
+    final divColor = MCMColors.dividerColor(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: isDark ? Colors.grey[800] : Colors.grey[200],
-          borderRadius: BorderRadius.circular(10),
+          color: divColor.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
@@ -214,6 +216,7 @@ class _AITodoSheetState extends ConsumerState<AITodoSheet> {
 
   Widget _buildModeButton(int mode, String title, bool isDark) {
     final isSelected = _selectedMode == mode;
+    final cardBg = MCMColors.card(context);
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -223,17 +226,16 @@ class _AITodoSheetState extends ConsumerState<AITodoSheet> {
             ref.read(aiTodoProvider.notifier).reset();
           }
         },
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected
-                ? (isDark ? Colors.grey[700] : Colors.white)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            color: isSelected ? cardBg : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                      color: MCMColors.darkBrown.withOpacity(0.06),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -245,7 +247,7 @@ class _AITodoSheetState extends ConsumerState<AITodoSheet> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
               color: isSelected
                   ? AppColors.link(context)
                   : AppColors.secondaryText(context),

@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:notes_app/utils/animations.dart';
 import 'package:notes_app/utils/app_colors.dart';
+import 'package:notes_app/utils/mcm_widget.dart';
 import 'package:notes_app/pages/drawer/todo/ai_todo_sheet.dart';
 
 enum TodoFilter {
@@ -120,13 +121,13 @@ class _TodoListPageState extends ConsumerState<TodoListPage> {
   }
 
   Widget _buildFilterSegment(TodoFilter currentFilter) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final divColor = MCMColors.dividerColor(context);
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[800] : Colors.grey[200],
-        borderRadius: BorderRadius.circular(10),
+        color: divColor.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
@@ -141,23 +142,22 @@ class _TodoListPageState extends ConsumerState<TodoListPage> {
   Widget _buildFilterButton(
       String title, TodoFilter filter, TodoFilter current) {
     final isSelected = filter == current;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = MCMColors.card(context);
     return Expanded(
       child: GestureDetector(
         onTap: () {
           ref.read(todoFilterProvider.notifier).state = filter;
         },
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected
-                ? (isDark ? Colors.grey[700] : Colors.white)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            color: isSelected ? cardBg : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                      color: MCMColors.darkBrown.withOpacity(0.06),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -169,7 +169,7 @@ class _TodoListPageState extends ConsumerState<TodoListPage> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
               color: isSelected
                   ? AppColors.link(context)
                   : AppColors.secondaryText(context),
@@ -190,15 +190,15 @@ class _TodoListPageState extends ConsumerState<TodoListPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline,
               size: 48,
-              color: Colors.grey,
+              color: MCMColors.secondaryText(context),
             ),
             const SizedBox(height: 16),
             Text(
               '加载失败: ${state.error}',
-              style: const TextStyle(color: Colors.grey),
+              style: TextStyle(color: MCMColors.secondaryText(context)),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -215,17 +215,16 @@ class _TodoListPageState extends ConsumerState<TodoListPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.check_circle_outline,
+            MCMStarburst(
               size: 64,
-              color: Colors.grey,
+              color: MCMColors.mustard.withOpacity(0.3),
             ),
             const SizedBox(height: 16),
             Text(
               _getEmptyMessage(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey,
+                color: MCMColors.secondaryText(context),
               ),
             ),
             const SizedBox(height: 24),
@@ -313,7 +312,7 @@ class _TodoListPageState extends ConsumerState<TodoListPage> {
             child: Text(
               '没有更多了',
               style: TextStyle(
-                color: Colors.grey,
+                color: MCMColors.walnut,
                 fontSize: 12,
               ),
             ),
@@ -637,18 +636,21 @@ class _TodoListItem extends StatelessWidget {
       onDismissed: (_) => onDelete(),
       child: GestureDetector(
         onTap: onEdit,
-        child: Container(
+          child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.cardBackground(context),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: MCMColors.dividerColor(context),
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(
-                    Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.03),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: MCMColors.darkBrown.withOpacity(0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -656,16 +658,16 @@ class _TodoListItem extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: onToggle,
-                child: Container(
+                  child: Container(
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isDone ? Colors.green : Colors.grey,
+                      color: isDone ? MCMColors.olive : MCMColors.walnut,
                       width: 2,
                     ),
-                    color: isDone ? Colors.green : Colors.transparent,
+                    color: isDone ? MCMColors.olive : Colors.transparent,
                   ),
                   child: isDone
                       ? const Icon(
@@ -715,14 +717,14 @@ class _TodoListItem extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
+                            color: MCMColors.coral.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
                             '已逾期',
                             style: TextStyle(
                               fontSize: 10,
-                              color: Colors.red,
+                              color: MCMColors.coral,
                             ),
                           ),
                         ),
@@ -730,10 +732,10 @@ class _TodoListItem extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right,
                 size: 16,
-                color: Colors.grey,
+                color: MCMColors.secondaryText(context),
               ),
             ],
           ),

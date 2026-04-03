@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notes_app/pages/article/search_results_page.dart';
 import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:notes_app/utils/mcm_widget.dart';
 
 import '../../local/SearchHistoryManager.dart';
 import '../../remote/Api.dart';
@@ -85,7 +85,7 @@ class _SearchPageState extends ConsumerState<SearchPage>
     final searchHistoryAsync = ref.watch(searchHistoryProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundColor(context),
+      backgroundColor: MCMColors.background(context),
       body: SafeArea(
         child: Column(
           children: [
@@ -110,43 +110,46 @@ class _SearchPageState extends ConsumerState<SearchPage>
   }
 
   Widget _buildSearchBar() {
+    final textColor = MCMColors.primaryText(context);
+    final subColor = MCMColors.secondaryText(context);
+    final bg = MCMColors.background(context);
+    final cardBg = MCMColors.card(context);
+    final divColor = MCMColors.dividerColor(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.backgroundColor(context),
-        boxShadow: [
-          BoxShadow(
-            color: CupertinoColors.systemGrey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: bg,
+        border: Border(bottom: BorderSide(color: divColor, width: 1)),
       ),
       child: Row(
         children: [
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.inputBackground(context),
-                borderRadius: BorderRadius.circular(25),
+                color: cardBg,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: divColor, width: 1),
               ),
               child: TextField(
                 controller: _searchController,
                 focusNode: _focusNode,
-                style: TextStyle(color: AppColors.primaryText(context)),
+                style: TextStyle(color: textColor),
                 decoration: InputDecoration(
                   hintText: '搜索文章',
-                  hintStyle: TextStyle(color: AppColors.tertiaryText(context)),
-                  prefixIcon: Icon(Icons.search, color: AppColors.iconSecondary(context)),
+                  hintStyle: TextStyle(color: subColor.withOpacity(0.5)),
+                  prefixIcon: Icon(Icons.search, color: MCMColors.orange.withOpacity(0.6)),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
-                          icon: Icon(Icons.clear, color: AppColors.iconSecondary(context)),
+                          icon: Icon(Icons.clear, color: subColor),
                           onPressed: () {
                             _searchController.clear();
                           },
                         )
                       : null,
                   border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
@@ -160,7 +163,7 @@ class _SearchPageState extends ConsumerState<SearchPage>
           const SizedBox(width: 12),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('取消', style: TextStyle(color: AppColors.link(context))),
+            child: Text('取消', style: TextStyle(color: MCMColors.orange, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -191,20 +194,13 @@ class _SearchPageState extends ConsumerState<SearchPage>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primaryText(context),
-          ),
-        ),
+        MCMSectionLabel(title.toUpperCase()),
         if (onClear != null)
           TextButton(
             onPressed: onClear,
             child: Text(
               '清空',
-              style: TextStyle(color: AppColors.tertiaryText(context), fontSize: 12),
+              style: TextStyle(color: MCMColors.coral, fontSize: 12, fontWeight: FontWeight.w600),
             ),
           ),
       ],
@@ -221,9 +217,10 @@ class _SearchPageState extends ConsumerState<SearchPage>
           onTap: () => _onKeywordTap(keyword),
           child: Chip(
             label: Text(keyword),
-            backgroundColor: AppColors.chipBackground(context),
-            labelStyle: TextStyle(color: AppColors.chipText(context), fontSize: 14),
-            deleteIcon: Icon(Icons.close, size: 16, color: AppColors.iconSecondary(context)),
+            backgroundColor: MCMColors.card(context),
+            labelStyle: TextStyle(color: MCMColors.primaryText(context), fontSize: 14),
+            side: BorderSide(color: MCMColors.dividerColor(context)),
+            deleteIcon: Icon(Icons.close, size: 16, color: MCMColors.secondaryText(context)),
             onDeleted: () => _removeHistoryItem(keyword),
           ),
         );

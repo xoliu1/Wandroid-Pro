@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:notes_app/model/note.dart';
 import 'package:notes_app/providers/note_provider.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:notes_app/utils/animations.dart';
+import 'package:notes_app/utils/mcm_widget.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:toastification/toastification.dart';
 
@@ -17,160 +18,195 @@ class NoteWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final noteColor = isDark
-        ? const Color.fromARGB(255, 60, 55, 35)
-        : const Color.fromARGB(255, 255, 246, 200);
+    final textColor = MCMColors.primaryText(context);
+    final subColor = MCMColors.secondaryText(context);
+    final cardBg = MCMColors.card(context);
+    final divColor = MCMColors.dividerColor(context);
     final noteNotifier = ref.read(noteProvider.notifier);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 15),
-      child: InkWell(
-        focusColor: Colors.transparent,
-        splashColor: Colors.transparent,
-        hoverColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        onLongPress: () {
-          showModalBottomSheet(
-            context: context,
-            builder: (context) => Container(
-              height: 80,
-              margin: const EdgeInsets.symmetric(vertical: 20),
-              width: double.infinity,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  InkWell(
-                    onTap: () {
-                      noteNotifier.deleteNote(note.id);
-                      toastification.show(
-                        context: context,
-                        title: const Text('笔记已删除'),
-                        primaryColor: Colors.red,
-                        showProgressBar: false,
-                        animationDuration: const Duration(milliseconds: 200),
-                        autoCloseDuration: const Duration(seconds: 2),
-                      );
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 50),
-                      height: 70,
-                      width: double.infinity,
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '删除笔记',
-                            style: TextStyle(
-                                fontSize: 15,
-                                color: Colors.red,
-                                fontWeight: FontWeight.w600),
-                          ),
-                          Icon(
-                            CupertinoIcons.delete,
-                            size: 20,
-                            color: Colors.red,
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-          onTap: () {
-          Navigator.push(
-            context,
-            CupertinoPageRoute(
-              builder: (context) => NoteEditorV2(existingNote: note,),
-            ),
-          );
-        },
-        child: Container(
-          height: 150,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          width: double.infinity,
-          decoration: BoxDecoration(
-              color: noteColor,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: noteColor.withOpacity(0.2),
-                  blurRadius: 5,
-                  spreadRadius: 5,
-                  offset: const Offset(0, 0),
-                )
-              ]),
-          child: Stack(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: 125,
+    return PressableScale(
+      onTap: () {
+        Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => NoteEditorV2(existingNote: note),
+          ),
+        );
+      },
+      onLongPress: () {
+        showModalBottomSheet(
+          context: context,
+          builder: (context) => Container(
+            height: 80,
+            margin: const EdgeInsets.symmetric(vertical: 20),
+            width: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                InkWell(
+                  onTap: () {
+                    noteNotifier.deleteNote(note.id);
+                    toastification.show(
+                      context: context,
+                      title: const Text('笔记已删除'),
+                      primaryColor: Colors.red,
+                      showProgressBar: false,
+                      animationDuration: const Duration(milliseconds: 200),
+                      autoCloseDuration: const Duration(seconds: 2),
+                    );
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 50),
+                    height: 70,
                     width: double.infinity,
-                    child: ListView(
-                      padding: const EdgeInsets.only(top: 10, bottom: 5),
-                      physics: const NeverScrollableScrollPhysics(),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const SizedBox(height: 8.0),
                         Text(
-                          note.content,
+                          '删除笔记',
                           style: TextStyle(
-                              fontSize: 16,
-                              overflow: TextOverflow.clip,
-                              color: AppColors.primaryText(context)),
+                              fontSize: 15,
+                              color: Colors.red,
+                              fontWeight: FontWeight.w600),
                         ),
-                        const SizedBox(height: 8.0),
+                        Icon(
+                          CupertinoIcons.delete,
+                          size: 20,
+                          color: Colors.red,
+                        )
                       ],
                     ),
                   ),
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(boxShadow: [
-                      BoxShadow(
-                          color: noteColor,
-                          blurRadius: 5,
-                          spreadRadius: 10,
-                          offset: const Offset(0, -5))
-                    ]),
-                    child: Text(
-                      (!isSameDay(DateTime.now(), note.lastModified)
-                          ? DateFormat.yMMMMd().format(note.lastModified)
-                          : DateFormat.jm().format(note.lastModified)),
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.secondaryText(context)),
-                    ),
-                  ),
-                ],
-              ),
-              Positioned(
-                right: -0,
-                bottom: 15,
-                child: Container(
-                  height: 30,
-                  width: 30,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.8)
-                        : Colors.black.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: Center(
-                    child: IconButton(
-                        onPressed: () {},
-                        icon: Icon(
-                          CupertinoIcons.pencil,
-                          color: isDark ? Colors.black : Colors.white,
-                          size: 16,
-                        )),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: divColor, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: MCMColors.darkBrown.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 左侧橙色竖条
+              Container(
+                width: 3,
+                decoration: const BoxDecoration(
+                  color: MCMColors.orange,
+                  borderRadius: BorderRadius.horizontal(
+                    left: Radius.circular(14),
                   ),
                 ),
-              )
+              ),
+              // 内容区域
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 笔记内容
+                      Text(
+                        note.content,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                          height: 1.45,
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 12),
+                      // 底部信息行
+                      Row(
+                        children: [
+                          // 日期标签
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: MCMColors.orange.withOpacity(0.10),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  CupertinoIcons.calendar,
+                                  size: 11,
+                                  color: MCMColors.orange,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  (!isSameDay(DateTime.now(), note.lastModified)
+                                      ? DateFormat('MM/dd').format(note.lastModified)
+                                      : '今天'),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: MCMColors.orange,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // 时间标签
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: MCMColors.grayBlue.withOpacity(0.10),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  CupertinoIcons.clock,
+                                  size: 11,
+                                  color: MCMColors.grayBlue,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  DateFormat('HH:mm').format(note.lastModified),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: MCMColors.grayBlue,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Spacer(),
+                          // 笔记图标
+                          Icon(
+                            CupertinoIcons.doc_text,
+                            size: 14,
+                            color: subColor.withOpacity(0.4),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notes_app/remote/CgiCollect.dart';
 import 'package:notes_app/utils/animations.dart';
+import 'package:notes_app/utils/mcm_widget.dart';
 import 'package:notes_app/utils/platform_utils.dart';
 
 import '../../providers/collect_provider.dart';
@@ -46,7 +47,7 @@ class _CollectListPageState extends ConsumerState<CollectListPage> {
     final collectState = ref.watch(collectArticleProvider);
     
     return PlatformScaffold(
-      backgroundColor: context.surfaceColor,
+      backgroundColor: MCMColors.background(context),
       appBar: PlatformAppBar(
         title: const Text('我的收藏'),
       ),
@@ -57,19 +58,14 @@ class _CollectListPageState extends ConsumerState<CollectListPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    PlatformUtils.isIOS 
-                        ? CupertinoIcons.heart 
-                        : Icons.favorite_border,
-                    size: 64,
-                    color: context.secondaryTextColor,
-                  ),
+                  MCMStarburst(size: 48, color: MCMColors.mustard.withOpacity(0.25)),
                   const SizedBox(height: 16),
                   Text(
                     '暂无收藏',
                     style: TextStyle(
                       fontSize: 16,
-                      color: context.secondaryTextColor,
+                      fontWeight: FontWeight.w600,
+                      color: MCMColors.secondaryText(context),
                     ),
                   ),
                 ],
@@ -129,28 +125,30 @@ class _CollectListPageState extends ConsumerState<CollectListPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                PlatformUtils.isIOS 
-                    ? CupertinoIcons.exclamationmark_triangle 
-                    : Icons.error_outline,
-                size: 64,
-                color: context.errorColor,
-              ),
+              MCMStarburst(size: 48, color: MCMColors.coral.withOpacity(0.3)),
               const SizedBox(height: 16),
               Text(
-                '加载失败: ${error.toString()}',
+                '加载失败',
                 style: TextStyle(
                   fontSize: 16,
-                  color: context.errorColor,
+                  fontWeight: FontWeight.w700,
+                  color: MCMColors.primaryText(context),
                 ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: TextStyle(fontSize: 13, color: MCMColors.secondaryText(context)),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
-              PlatformButton(
-                onPressed: () {
+              const SizedBox(height: 20),
+              MCMPrimaryButton(
+                label: 'RETRY',
+                icon: Icons.refresh_rounded,
+                isSmall: true,
+                onTap: () {
                   ref.read(collectArticleProvider.notifier).refresh();
                 },
-                child: const Text('重试'),
               ),
             ],
           ),

@@ -1,37 +1,143 @@
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/ai/models/user_context.dart';
+
 import 'package:notes_app/ai/providers/ai_provider_manager.dart';
 import 'package:notes_app/ai/providers/user_context_provider.dart';
 import 'package:notes_app/ai/services/ai_service.dart';
 import 'package:notes_app/ai/services/browsing_history_db.dart';
+import 'package:notes_app/local/KV.dart';
 import 'package:notes_app/model/db/sqflite.dart';
 import 'package:notes_app/remote/CgiTodo.dart';
+
+/// 日报阅读板块
+class DailyReadingSection {
+  final String? summary;
+  final List<String> items;
+  DailyReadingSection({this.summary, required this.items});
+}
+
+/// 日报任务板块
+class DailyTodosSection {
+  final String? completedSummary;
+  final List<String> completed;
+  final String? pendingSummary;
+  final List<String> pending;
+  DailyTodosSection({
+    this.completedSummary,
+    required this.completed,
+    this.pendingSummary,
+    required this.pending,
+  });
+}
+
+/// 日报笔记板块
+class DailyNotesSection {
+  final String? summary;
+  final List<String> items;
+  DailyNotesSection({this.summary, required this.items});
+}
+
+/// 结构化日报数据
+class DailyReport {
+  final String overview;
+  final DailyReadingSection? reading;
+  final DailyTodosSection? todos;
+  final DailyNotesSection? notes;
+  final List<String> suggestions;
+
+  DailyReport({
+    required this.overview,
+    this.reading,
+    this.todos,
+    this.notes,
+    required this.suggestions,
+  });
+
+  factory DailyReport.fromJson(Map<String, dynamic> json) {
+    // 解析阅读板块
+    DailyReadingSection? reading;
+    final readingJson = json['reading'];
+    if (readingJson != null) {
+      final items = (readingJson['items'] as List?)?.map((e) => e.toString()).toList() ?? [];
+      if (items.isNotEmpty || readingJson['summary'] != null) {
+        reading = DailyReadingSection(
+          summary: readingJson['summary'] as String?,
+          items: items,
+        );
+      }
+    }
+
+    // 解析任务板块
+    DailyTodosSection? todos;
+    final todosJson = json['todos'];
+    if (todosJson != null) {
+      final completed = (todosJson['completed'] as List?)?.map((e) => e.toString()).toList() ?? [];
+      final pending = (todosJson['pending'] as List?)?.map((e) => e.toString()).toList() ?? [];
+      if (completed.isNotEmpty || pending.isNotEmpty) {
+        todos = DailyTodosSection(
+          completedSummary: todosJson['completed_summary'] as String?,
+          completed: completed,
+          pendingSummary: todosJson['pending_summary'] as String?,
+          pending: pending,
+        );
+      }
+    }
+
+    // 解析笔记板块
+    DailyNotesSection? notes;
+    final notesJson = json['notes'];
+    if (notesJson != null) {
+      final items = (notesJson['items'] as List?)?.map((e) => e.toString()).toList() ?? [];
+      if (items.isNotEmpty || notesJson['summary'] != null) {
+        notes = DailyNotesSection(
+          summary: notesJson['summary'] as String?,
+          items: items,
+        );
+      }
+    }
+
+    // 解析建议
+    final suggestions = (json['suggestions'] as List?)?.map((e) => e.toString()).toList() ?? [];
+
+    return DailyReport(
+      overview: json['overview'] as String? ?? '今日活动已汇总',
+      reading: reading,
+      todos: todos,
+      notes: notes,
+      suggestions: suggestions,
+    );
+  }
+}
 
 /// AI 日报状态
 class AIDailyReportState {
   final bool isLoading;
-  final String content; // 流式输出的 Markdown 内容
+  final String rawContent; // 流式输出的原始内容（用于显示打字效果）
   final bool isCompleted;
+  final DailyReport? report; // 解析后的结构化数据
   final String? error;
 
   const AIDailyReportState({
     this.isLoading = false,
-    this.content = '',
+    this.rawContent = '',
     this.isCompleted = false,
+    this.report,
     this.error,
   });
 
   AIDailyReportState copyWith({
     bool? isLoading,
-    String? content,
+    String? rawContent,
     bool? isCompleted,
+    DailyReport? report,
     String? error,
   }) {
     return AIDailyReportState(
       isLoading: isLoading ?? this.isLoading,
-      content: content ?? this.content,
+      rawContent: rawContent ?? this.rawContent,
       isCompleted: isCompleted ?? this.isCompleted,
+      report: report ?? this.report,
       error: error ?? this.error,
     );
   }
@@ -49,9 +155,24 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
 
   AIDailyReportNotifier(this._ref) : super(const AIDailyReportState());
 
-  /// 生成日报
-  Future<void> generateReport() async {
+  /// 生成日报（forceRegenerate: 是否强制重新生成，忽略今日缓存）
+  Future<void> generateReport({bool forceRegenerate = false}) async {
     if (state.isLoading) return;
+
+    // 如果不是强制重新生成，先检查今日是否已有缓存
+    if (!forceRegenerate) {
+      final cached = getTodayDailyReport();
+      if (cached != null) {
+        final report = _parseReport(cached);
+        state = state.copyWith(
+          isLoading: false,
+          isCompleted: true,
+          rawContent: cached,
+          report: report,
+        );
+        return;
+      }
+    }
 
     // 检查 AI 配置
     final activeProvider = _ref.read(activeAIProviderProvider);
@@ -69,7 +190,10 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
         state = state.copyWith(
           isLoading: false,
           isCompleted: true,
-          content: '## 📋 今日暂无活动记录\n\n今天还没有浏览文章、完成任务或编辑笔记。\n\n去看看有什么有趣的文章吧！ 🚀',
+          report: DailyReport(
+            overview: '今天还没有浏览文章、完成任务或编辑笔记，去看看有什么有趣的文章吧！ 🚀',
+            suggestions: ['去首页浏览今日推荐文章', '整理一下待办事项'],
+          ),
         );
         return;
       }
@@ -83,7 +207,7 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
         userContext: userContext,
       );
 
-      // 4. 流式请求
+      // 4. 流式请求（收集完整 JSON 后解析）
       _aiService = AIService(activeProvider);
       final stream = _aiService!.sendChatStream(messages: messages);
 
@@ -91,12 +215,23 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
       await for (final chunk in stream) {
         buffer.write(chunk);
         if (mounted) {
-          state = state.copyWith(content: buffer.toString());
+          state = state.copyWith(rawContent: buffer.toString());
         }
       }
 
+      // 5. 解析 JSON 并缓存
       if (mounted) {
-        state = state.copyWith(isLoading: false, isCompleted: true);
+        final rawJson = buffer.toString();
+        final report = _parseReport(rawJson);
+        // 解析成功才缓存
+        if (report.overview != '生成失败，请重试') {
+          saveDailyReport(rawJson);
+        }
+        state = state.copyWith(
+          isLoading: false,
+          isCompleted: true,
+          report: report,
+        );
       }
     } catch (e) {
       debugPrint('📊 日报生成失败: $e');
@@ -106,6 +241,27 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
           error: '生成失败: ${e.toString().length > 100 ? '${e.toString().substring(0, 100)}...' : e}',
         );
       }
+    }
+  }
+
+  /// 解析 AI 返回的 JSON 为结构化日报
+  DailyReport _parseReport(String raw) {
+    try {
+      // 清理可能的 markdown 代码块标记
+      var cleaned = raw.trim();
+      if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replaceFirst(RegExp(r'^```[a-z]*\n?'), '');
+        cleaned = cleaned.replaceFirst(RegExp(r'\n?```$'), '');
+      }
+      final json = jsonDecode(cleaned) as Map<String, dynamic>;
+      return DailyReport.fromJson(json);
+    } catch (e) {
+      debugPrint('📊 日报 JSON 解析失败: $e, raw: $raw');
+      // 解析失败时返回一个包含原始内容的兜底报告
+      return DailyReport(
+        overview: raw.isNotEmpty ? '日报已生成（显示原始内容）' : '生成失败，请重试',
+        suggestions: [],
+      );
     }
   }
 
@@ -127,9 +283,9 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
       _collectTodayNotes(),
     ]);
 
-    final browsingData = results[0] as String;
-    final todoData = results[1] as String;
-    final noteData = results[2] as String;
+    final browsingData = results[0];
+    final todoData = results[1];
+    final noteData = results[2];
 
     buffer.writeln('📅 日期：${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}');
     buffer.writeln();

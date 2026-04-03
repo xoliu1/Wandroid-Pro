@@ -46,70 +46,61 @@ class NotesPage extends ConsumerWidget {
           controller: _refreshController,
           onRefresh: () => refreshNotes(ref),
           child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
-                  const SizedBox(height: 60.0),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Notes',
-                        style: TextStyle(
-                          fontSize: 30.0,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryText(context),
-                        ),
+            child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              const SizedBox(height: 60.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Notes',
+                      style: TextStyle(
+                        fontSize: 30.0,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryText(context),
                       ),
-                      // AddNoteButton()
-
-                      IconButton(
-                        icon: const Icon(Icons.refresh),
-                        onPressed: () => refreshNotes(ref),
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: (notes.isEmpty
-                        ? SizedBox(
-                            height: 380,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                    height: 250,
-                                    child: Image.asset(
-                                        'assets/images/empty3.png')),
-                                Text(
-                                  "You don't have any notes yet",
-                                  style: TextStyle(
-                                      fontSize: 18.0,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.primaryText(context)),
-                                ),
-                              ],
-                            ),
-                          )
-                        : SizedBox(
-                            width: double.infinity,
-                            height: (noteWidgets.length) * 180.0 + 180,
-                            child: Column(
-                              children: noteWidgets.asMap().entries.map((entry) {
-                                return AnimatedListItem(
-                                  index: entry.key,
-                                  child: entry.value,
-                                );
-                              }).toList(),
-                            ),
-                          )),
-                  ),
-                ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: () => refreshNotes(ref),
+                    )
+                  ],
+                ),
               ),
-            ),
+              const SizedBox(height: 10),
+              notes.isEmpty
+                  ? SizedBox(
+                      height: 380,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                              height: 250,
+                              child: Image.asset('assets/images/empty3.png')),
+                          Text(
+                            "You don't have any notes yet",
+                            style: TextStyle(
+                                fontSize: 18.0,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primaryText(context)),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Column(
+                      children: noteWidgets.asMap().entries.map((entry) {
+                        return AnimatedListItem(
+                          index: entry.key,
+                          child: entry.value,
+                        );
+                      }).toList(),
+                    ),
+              const SizedBox(height: 80),
+            ],
+          ),
           ),
         ));
   }

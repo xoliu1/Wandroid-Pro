@@ -4,6 +4,7 @@ import 'package:notes_app/pages/widget/article_card.dart';
 import 'package:notes_app/utils/animations.dart';
 import 'package:tab_container/tab_container.dart';
 import 'package:notes_app/utils/app_colors.dart';
+import 'package:notes_app/utils/mcm_widget.dart';
 import '../../providers/chapter_provider.dart';
 import '../../remote/Api.dart';
 
@@ -309,10 +310,10 @@ class _ArticleListTabState extends ConsumerState<_ArticleListTab>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline,
               size: 48,
-              color: Colors.grey,
+              color: MCMColors.walnut,
             ),
             const SizedBox(height: 16),
             Text(
@@ -321,10 +322,6 @@ class _ArticleListTabState extends ConsumerState<_ArticleListTab>
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
-              ),
               onPressed: _refresh,
               child: const Text('重试'),
             ),
@@ -339,7 +336,7 @@ class _ArticleListTabState extends ConsumerState<_ArticleListTab>
               style: Theme.of(context)
                   .textTheme
                   .bodyLarge
-                  ?.copyWith(color: Colors.grey),
+                  ?.copyWith(color: MCMColors.walnut),
             ),
           );
         }
@@ -364,7 +361,7 @@ class _ArticleListTabState extends ConsumerState<_ArticleListTab>
                         style: Theme.of(context)
                             .textTheme
                             .bodyLarge
-                            ?.copyWith(color: Colors.grey),
+                            ?.copyWith(color: MCMColors.walnut),
                       ),
                     ),
                   );

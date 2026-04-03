@@ -86,7 +86,7 @@ class _HomePageState extends ConsumerState<WelcomePage>
         .toList();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(children: [
         // 顶部内容保持不变
         Padding(

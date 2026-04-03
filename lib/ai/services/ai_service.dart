@@ -218,19 +218,35 @@ class AIService {
 
     final systemPrompt = StringBuffer();
     systemPrompt.writeln('你是一个贴心的个人效率助手，负责为用户生成每日总结报告。');
-    systemPrompt.writeln('请根据用户今天的活动数据，生成一份简洁、有洞察力的日报。');
+    systemPrompt.writeln('请根据用户今天的活动数据，生成一份结构化的日报。');
     systemPrompt.writeln();
-    systemPrompt.writeln('要求：');
-    systemPrompt.writeln('1. 使用 Markdown 格式输出');
-    systemPrompt.writeln('2. 包含以下板块（如果有数据的话）：');
-    systemPrompt.writeln('   - 📊 今日概览：用一句话总结今天的整体情况');
-    systemPrompt.writeln('   - 📖 阅读回顾：浏览了哪些文章，有什么主题倾向');
-    systemPrompt.writeln('   - ✅ 任务进展：完成了哪些待办，还有哪些未完成');
-    systemPrompt.writeln('   - 📝 笔记动态：新增或修改了哪些笔记');
-    systemPrompt.writeln('   - 💡 明日建议：基于今天的情况，给出 1-2 条明天的建议');
-    systemPrompt.writeln('3. 语气亲切自然，像朋友一样聊天');
-    systemPrompt.writeln('4. 如果某个板块没有数据，就跳过不写');
-    systemPrompt.writeln('5. 总长度控制在 300 字以内');
+    systemPrompt.writeln('**重要**：你必须严格按照以下 JSON 格式返回结果，不要输出任何其他内容（不要输出 markdown 代码块标记）：');
+    systemPrompt.writeln();
+    systemPrompt.writeln('''{
+  "overview": "用一句话总结今天的整体情况（必填，即使没有数据也要写）",
+  "reading": {
+    "summary": "阅读主题倾向的一句话总结",
+    "items": ["文章标题1", "文章标题2"]
+  },
+  "todos": {
+    "completed_summary": "今日完成任务的一句话总结",
+    "completed": ["已完成任务1", "已完成任务2"],
+    "pending_summary": "待完成任务的一句话说明",
+    "pending": ["待完成任务1", "待完成任务2"]
+  },
+  "notes": {
+    "summary": "笔记动态的一句话总结",
+    "items": ["笔记摘要1", "笔记摘要2"]
+  },
+  "suggestions": ["明日建议1", "明日建议2"]
+}''');
+    systemPrompt.writeln();
+    systemPrompt.writeln('规则：');
+    systemPrompt.writeln('1. 如果某个板块没有数据，对应字段设为 null（不要省略字段）');
+    systemPrompt.writeln('2. items/completed/pending 数组最多 5 条');
+    systemPrompt.writeln('3. suggestions 给出 1-2 条具体可执行的建议');
+    systemPrompt.writeln('4. 语气亲切自然，summary 字段像朋友一样聊天');
+    systemPrompt.writeln('5. 只输出 JSON，不要有任何其他文字');
 
     if (userContext != null && userContext.isNotEmpty) {
       systemPrompt.writeln('\n以下是用户的背景信息，可以据此让总结更个性化：');

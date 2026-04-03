@@ -24,6 +24,11 @@ const KEY_USE_NEW_TODO_UI = 'use_new_todo_ui';
 
 const KEY_LAST_SESSION_CHECK_DATE = 'last_session_check_date';
 
+/// AI 日报：上次生成日期
+const KEY_DAILY_REPORT_DATE = 'daily_report_date';
+/// AI 日报：上次生成的 JSON 内容
+const KEY_DAILY_REPORT_CONTENT = 'daily_report_content';
+
 /// 自定义强调色（存储 Color.value 的 int 值）
 const KEY_ACCENT_COLOR = 'accent_color';
 
@@ -123,4 +128,30 @@ bool setAccentColorValue(int colorValue) {
 /// 重置为默认强调色
 void resetAccentColor() {
   Kv.removeValue(KEY_ACCENT_COLOR);
+}
+
+/// 判断今天是否已经生成过日报
+bool hasDailyReportToday() {
+  final lastDate = Kv.decodeString(KEY_DAILY_REPORT_DATE) ?? '';
+  final today = DateTime.now().toIso8601String().substring(0, 10);
+  return lastDate == today;
+}
+
+/// 保存今日日报 JSON 内容
+void saveDailyReport(String jsonContent) {
+  final today = DateTime.now().toIso8601String().substring(0, 10);
+  Kv.encodeString(KEY_DAILY_REPORT_DATE, today);
+  Kv.encodeString(KEY_DAILY_REPORT_CONTENT, jsonContent);
+}
+
+/// 读取今日缓存的日报 JSON（如果不是今天则返回 null）
+String? getTodayDailyReport() {
+  if (!hasDailyReportToday()) return null;
+  return Kv.decodeString(KEY_DAILY_REPORT_CONTENT);
+}
+
+/// 清除日报缓存
+void clearDailyReport() {
+  Kv.removeValue(KEY_DAILY_REPORT_DATE);
+  Kv.removeValue(KEY_DAILY_REPORT_CONTENT);
 }

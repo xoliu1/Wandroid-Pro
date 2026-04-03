@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notes_app/pages/drawer/todo/todo_entry.dart';
 import '../../ai/ui/ai_provider_management_page.dart';
+import '../../utils/mcm_widget.dart';
 import 'ai_daily_report_sheet.dart';
 import 'browsing_history_page.dart';
 import 'chat_history_page.dart';
@@ -29,9 +30,10 @@ class HomeSlider extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 使用 ref.watch 监听登录状态，当状态变化时 UI 会自动重建
     final isLoggedIn = ref.watch(loginStateProvider);
+    final bg = MCMColors.background(context);
     
     return Scaffold(
-        backgroundColor: context.surfaceColor,  // 统一背景色
+        backgroundColor: bg,
         body: SafeArea(
             child: Column(children: [
               _buildProfile(context, isLoggedIn),
@@ -39,51 +41,47 @@ class HomeSlider extends ConsumerWidget {
             ])));
   }
 
-  /// 头像、姓名、等级、排名
+  /// 头像、姓名、等级、排名 — MCM 风格
   Widget _buildProfile(BuildContext context, bool isLoggedIn) {
-    final colorS = Theme.of(context).colorScheme;
+    final textColor = MCMColors.primaryText(context);
+    final subColor = MCMColors.secondaryText(context);
+    final divColor = MCMColors.dividerColor(context);
+    final bg = MCMColors.background(context);
     
     if (!isLoggedIn) {
       // 未登录状态
       return Container(
-        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
         decoration: BoxDecoration(
-          color: context.surfaceColor,
-          border: Border(
-            bottom: BorderSide(
-              color: context.dividerColor,
-              width: 0.5,
-            ),
-          ),
+          color: bg,
+          border: Border(bottom: BorderSide(color: divColor, width: 1)),
         ),
         child: Column(
           children: [
-            CircleAvatar(
-              radius: 36,
-              backgroundColor: colorS.primaryContainer,
-              child: Icon(
-                CupertinoIcons.person,
-                size: 40,
-                color: colorS.onPrimaryContainer,
+            // MCM 装饰
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: 6, height: 6, decoration: const BoxDecoration(color: MCMColors.orange, shape: BoxShape.circle)),
+                const SizedBox(width: 6),
+                Container(width: 20, height: 3, decoration: BoxDecoration(color: MCMColors.mustard, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(width: 6),
+                Container(width: 6, height: 6, decoration: const BoxDecoration(color: MCMColors.olive, shape: BoxShape.circle)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: 72, height: 72,
+              decoration: BoxDecoration(
+                color: MCMColors.orange.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(20),
               ),
+              child: Icon(CupertinoIcons.person, size: 36, color: MCMColors.orange),
             ),
             const SizedBox(height: 12),
-            Text(
-              '未登录',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: colorS.onSurface,
-              ),
-            ),
+            Text('未登录', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 0.5)),
             const SizedBox(height: 6),
-            Text(
-              '登录后可使用更多功能',
-              style: TextStyle(
-                fontSize: 14,
-                color: colorS.onSurfaceVariant,
-              ),
-            ),
+            Text('登录后可使用更多功能', style: TextStyle(fontSize: 13, color: subColor)),
           ],
         ),
       );
@@ -92,51 +90,63 @@ class HomeSlider extends ConsumerWidget {
     // 已登录状态
     final profile = getUserProfile();
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
       decoration: BoxDecoration(
-        color: context.surfaceColor,
-        border: Border(
-          bottom: BorderSide(
-            color: context.dividerColor,
-            width: 0.5,
-          ),
-        ),
+        color: bg,
+        border: Border(bottom: BorderSide(color: divColor, width: 1)),
       ),
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 36,
-            backgroundImage: CachedNetworkImageProvider(profile
-                    .userInfo.icon.isNotEmpty
-                ? profile.userInfo.icon
-                : "https://avatars.githubusercontent.com/u/126433098"),
+          // MCM 装饰
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(width: 6, height: 6, decoration: const BoxDecoration(color: MCMColors.orange, shape: BoxShape.circle)),
+              const SizedBox(width: 6),
+              Container(width: 20, height: 3, decoration: BoxDecoration(color: MCMColors.mustard, borderRadius: BorderRadius.circular(2))),
+              const SizedBox(width: 6),
+              Container(width: 6, height: 6, decoration: const BoxDecoration(color: MCMColors.olive, shape: BoxShape.circle)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: MCMColors.orange.withOpacity(0.3), width: 2),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: CircleAvatar(
+                radius: 36,
+                backgroundImage: CachedNetworkImageProvider(profile
+                        .userInfo.icon.isNotEmpty
+                    ? profile.userInfo.icon
+                    : "https://avatars.githubusercontent.com/u/126433098"),
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           Text(
             profile.userInfo.publicName,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: colorS.onSurface,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 0.5),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
           Text(
-            profile.userInfo.email.isNotEmpty
-                ? profile.userInfo.email
-                : '未绑定邮箱',
-            style: TextStyle(
-              fontSize: 13,
-              color: colorS.onSurfaceVariant,
-            ),
+            profile.userInfo.email.isNotEmpty ? profile.userInfo.email : '未绑定邮箱',
+            style: TextStyle(fontSize: 13, color: subColor),
           ),
-          const SizedBox(height: 12),
-          Text(
-            '等级 Lv.${profile.coinInfo.level}  |  排名 ${profile.coinInfo.rank}',
-            style: TextStyle(
-              fontSize: 13,
-              color: colorS.onSurfaceVariant,
+          const SizedBox(height: 10),
+          // MCM 风格等级标签
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: MCMColors.olive.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              'Lv.${profile.coinInfo.level}  ·  排名 ${profile.coinInfo.rank}',
+              style: TextStyle(fontSize: 12, color: MCMColors.olive, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -145,25 +155,19 @@ class HomeSlider extends ConsumerWidget {
   }
 
   Widget _buildConfig(BuildContext context, WidgetRef ref, bool isLoggedIn) {
+    final bg = MCMColors.background(context);
     return Container(
-      color: context.surfaceColor,
+      color: bg,
       child: ListView(
-        padding: EdgeInsets.zero,  // 移除默认 padding
+        padding: EdgeInsets.zero,
         children: [
-          const SizedBox(height: 8),  // 顶部小间距
+          const SizedBox(height: 8),
           // 第一组：通知、TODO、NOTE（仅登录时显示）
           if (isLoggedIn) ...[
             if (PlatformUtils.isAndroid)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                child: Text(
-                  '个人中心',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: context.secondaryTextColor,
-                  ),
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 6),
+                child: MCMSectionLabel('个人中心'.toUpperCase()),
               ),
             _buildListSection(
               context,
@@ -180,15 +184,8 @@ class HomeSlider extends ConsumerWidget {
           if (isLoggedIn) ...[
             if (PlatformUtils.isAndroid)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                child: Text(
-                  '我的',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: context.secondaryTextColor,
-                  ),
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
+                child: MCMSectionLabel('我的'.toUpperCase()),
               ),
             _buildListSection(
               context,
@@ -203,15 +200,8 @@ class HomeSlider extends ConsumerWidget {
           /// 第三组：AI 配置、夜间模式、设置
           if (PlatformUtils.isAndroid)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-              child: Text(
-                '通用',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: context.secondaryTextColor,
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
+              child: MCMSectionLabel('通用'.toUpperCase()),
             ),
           _buildListSection(
             context,

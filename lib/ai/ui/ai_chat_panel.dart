@@ -10,6 +10,7 @@ import '../models/article_content.dart';
 import '../models/chat_message.dart';
 import '../providers/ai_chat_provider.dart';
 import '../../utils/platform_utils.dart';
+import '../../utils/mcm_widget.dart';
 
 /// AI 对话面板（底部抽屉式）
 class AIChatPanel extends ConsumerStatefulWidget {
@@ -189,8 +190,6 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> with SingleTickerProv
 
   /// 构建输入区域
   Widget _buildInputArea(BuildContext context, AIChatState state) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return Container(
       padding: EdgeInsets.only(
         left: 16,
@@ -199,10 +198,10 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> with SingleTickerProv
         bottom: MediaQuery.of(context).viewInsets.bottom + 16, // 关键：适配键盘高度
       ),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.grey[100],
+        color: MCMColors.card(context),
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+            color: MCMColors.dividerColor(context),
             width: 0.5,
           ),
         ),
@@ -219,7 +218,7 @@ class _AIChatPanelState extends ConsumerState<AIChatPanel> with SingleTickerProv
               decoration: InputDecoration(
                 hintText: '输入你的问题...',
                 filled: true,
-                fillColor: isDark ? Colors.grey[800] : Colors.white,
+                fillColor: MCMColors.background(context),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,

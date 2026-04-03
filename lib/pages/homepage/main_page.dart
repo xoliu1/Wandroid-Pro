@@ -15,6 +15,7 @@ import '../../ai/providers/user_context_provider.dart';
 import '../../ai/services/browsing_history_db.dart';
 import '../../local/KV.dart';
 import '../../providers/chapter_provider.dart';
+import '../../utils/mcm_widget.dart';
 import '../article/search_page.dart';
 import '../drawer/slider.dart';
 import '../knowledgeTree/knowledge_page.dart';
@@ -133,6 +134,10 @@ class _MainPageState extends ConsumerState<MainPage>
   @override
   Widget build(BuildContext context) {
     final colorTheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final barBg = isDark ? const Color(0xFF2C2416) : const Color(0xFF3A2D1F);
+    final barBorder = isDark ? const Color(0xFF4A3828) : const Color(0xFF6B5D4F);
+
     return Scaffold(
       backgroundColor: colorTheme.surface,
       drawer: const HomeSlider(),
@@ -146,30 +151,70 @@ class _MainPageState extends ConsumerState<MainPage>
         backgroundColor: colorTheme.surface,
         leading: Builder(
           builder: (context) {
-            return IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
+            return GestureDetector(
+              onTap: () => Scaffold.of(context).openDrawer(),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: MCMColors.orange.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.menu_rounded, size: 20),
+                ),
+              ),
             );
           },
         ),
         centerTitle: true,
-        title: Text(
-          getAppBarTitle(),
-          textAlign: TextAlign.center,
-        style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: const BoxDecoration(
+                color: MCMColors.orange,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              getAppBarTitle().toUpperCase(),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 16,
+              height: 3,
+              decoration: BoxDecoration(
+                color: MCMColors.mustard,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
         ),
         actions: [
-          CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: _openSearchPage,
-            minimumSize: const Size(0, 0),
-            child: const Icon(CupertinoIcons.search, size: 24),
-          )
+          GestureDetector(
+            onTap: _openSearchPage,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: MCMColors.orange.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(CupertinoIcons.search, size: 18),
+              ),
+            ),
+          ),
         ],
       ),
       body: Stack(
@@ -185,28 +230,30 @@ class _MainPageState extends ConsumerState<MainPage>
               child: SlideUpEntrance(
                 child: Center(
                   child: Container(
-                    width: MediaQuery.of(context).size.width * 0.9,
+                    width: MediaQuery.of(context).size.width * 0.92,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(40),
-                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(22),
+                      color: barBg,
+                      border: Border.all(color: barBorder.withOpacity(0.3), width: 1),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                          offset: const Offset(0, 2),
+                          color: const Color(0xFF2C2416).withOpacity(0.25),
+                          blurRadius: 16,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
                     child: TabBar(
                     controller: _tabController,
-                    indicator: const UnderlineTabIndicator(
-                      borderSide: BorderSide(color: Colors.white, width: 2),
-                      insets: EdgeInsets.fromLTRB(0, 0, 0, 8),
+                    indicator: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: MCMColors.orange, width: 2.5),
+                      ),
                     ),
                     dividerColor: Colors.transparent,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.white.withOpacity(0.6),
+                    labelColor: MCMColors.orange,
+                    unselectedLabelColor: const Color(0xFFA08B78),
                     tabs: [
                       _buildTab(0, CupertinoIcons.news_solid),
                       _buildTab(1, CupertinoIcons.map_fill),

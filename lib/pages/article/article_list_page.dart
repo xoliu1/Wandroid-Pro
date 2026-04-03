@@ -4,9 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notes_app/pages/widget/article_card.dart';
 import 'package:notes_app/pages/widget/article_banner.dart';
 import 'package:notes_app/providers/article_provider.dart';
-import 'package:notes_app/remote/CgiUser.dart';
 import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:notes_app/utils/mcm_widget.dart';
 
 class ArticleListPage extends ConsumerStatefulWidget {
   const ArticleListPage({super.key});
@@ -51,9 +50,8 @@ class _ArticleListPageState extends ConsumerState<ArticleListPage>
   @override
   Widget build(BuildContext context) {
     final articleNotifier = ref.read(articleProvider.notifier);
-    //todo 抽屉样式改
     return CupertinoPageScaffold(
-      backgroundColor: AppColors.groupedBackground(context),
+      backgroundColor: MCMColors.background(context),
       child: SafeArea(
           child: _buildContent(articleNotifier),
         ),
@@ -77,31 +75,52 @@ class _ArticleListPageState extends ConsumerState<ArticleListPage>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(CupertinoIcons.exclamationmark_triangle,
-                      size: 48, color: CupertinoColors.systemGrey),
+                  MCMStarburst(size: 48, color: MCMColors.coral.withOpacity(0.3)),
                   const SizedBox(height: 16),
                   Text(
-                    '加载失败: ${error.toString()}',
-                    style: CupertinoTheme.of(context).textTheme.textStyle,
+                    '加载失败',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: MCMColors.primaryText(context),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  CupertinoButton(
-                    color: CupertinoColors.systemBlue,
-                    onPressed: _onRefresh,
-                    child: const Text('重试'),
+                  const SizedBox(height: 8),
+                  Text(
+                    error.toString(),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: MCMColors.secondaryText(context),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  MCMPrimaryButton(
+                    label: 'RETRY',
+                    icon: Icons.refresh_rounded,
+                    isSmall: true,
+                    onTap: _onRefresh,
                   ),
                 ],
               ),
             ),
             data: (articles) {
               if (articles.isEmpty) {
-                return Center(
-                  child: Text(
-                    '暂无文章',
-                    style:
-                        CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                              color: CupertinoColors.systemGrey,
-                            ),
+              return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      MCMStarburst(size: 40, color: MCMColors.mustard.withOpacity(0.2)),
+                      const SizedBox(height: 16),
+                      Text(
+                        '暂无文章',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: MCMColors.secondaryText(context),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }
@@ -135,14 +154,22 @@ class _ArticleListPageState extends ConsumerState<ArticleListPage>
                       return Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Center(
-                          child: Text(
-                            '没有更多文章了',
-                            style: CupertinoTheme.of(context)
-                                .textTheme
-                                .textStyle
-                                .copyWith(
-                                  color: CupertinoColors.systemGrey,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(width: 20, height: 2, decoration: BoxDecoration(color: MCMColors.mustard.withOpacity(0.3), borderRadius: BorderRadius.circular(1))),
+                              const SizedBox(width: 10),
+                              Text(
+                                '没有更多了',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: MCMColors.secondaryText(context),
+                                  fontWeight: FontWeight.w500,
                                 ),
+                              ),
+                              const SizedBox(width: 10),
+                              Container(width: 20, height: 2, decoration: BoxDecoration(color: MCMColors.mustard.withOpacity(0.3), borderRadius: BorderRadius.circular(1))),
+                            ],
                           ),
                         ),
                       );

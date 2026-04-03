@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notes_app/pages/knowledgeTree/tree_article_page.dart';
 import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:notes_app/utils/mcm_widget.dart';
 
 import '../../providers/chapter_provider.dart';
 import '../../remote/Api.dart';
@@ -28,12 +28,7 @@ class KnowledgeSystemTab extends ConsumerWidget {
             final chapter = chapters[index];
             return AnimatedListItem(
               index: index,
-              child: Column(
-                children: [
-                  _buildItem(context, chapter),
-                  const Divider(height: 1, thickness: 1),
-                ],
-              ),
+              child: _buildItem(context, chapter),
             );
           },
         ));
@@ -42,11 +37,13 @@ class KnowledgeSystemTab extends ConsumerWidget {
   }
 
   Widget _buildItem(BuildContext context, Chapter chapter) {
-    return InkWell(
+    final textColor = MCMColors.primaryText(context);
+    final subColor = MCMColors.secondaryText(context);
+    final divColor = MCMColors.dividerColor(context);
+
+    return GestureDetector(
         onTap: () {
-          // 检查是否有子分类
           if (chapter.children.isEmpty) {
-            // 没有子分类，显示提示
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('「${chapter.name}」暂无子分类内容'),
@@ -67,51 +64,51 @@ class KnowledgeSystemTab extends ConsumerWidget {
           );
         },
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: MCMColors.card(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: divColor, width: 1),
+          ),
           child: Row(
             children: [
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          chapter.name,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primaryText(context),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8, top: 8),
-                          child: chapter.children.isEmpty
-                              ? Text(
-                                  '暂无子分类',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.tertiaryText(context),
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                )
-                              : Wrap(
-                                  spacing: 8,
-                                  runSpacing: 4,
-                                  children: chapter.children.map((child) {
-                                    return Text(
-                                      child.name,
-                                      style: TextStyle(
-                                          fontSize: 14, color: AppColors.secondaryText(context)),
-                                    );
-                                  }).toList(),
-                                ),
-                        ),
-                      ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      chapter.name,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: textColor,
+                      ),
                     ),
-                  ),
+                    if (chapter.children.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: chapter.children.map((child) {
+                          return Text(
+                            child.name,
+                            style: TextStyle(fontSize: 13, color: subColor),
+                          );
+                        }).toList(),
+                      ),
+                    ] else
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          '暂无子分类',
+                          style: TextStyle(fontSize: 13, color: subColor.withOpacity(0.5), fontStyle: FontStyle.italic),
+                        ),
+                      ),
+                  ],
                 ),
-                Icon(Icons.arrow_circle_right, color: AppColors.iconSecondary(context)),
+              ),
+              Icon(Icons.chevron_right_rounded, color: MCMColors.mustard.withOpacity(0.6), size: 22),
             ],
           ),
         ));

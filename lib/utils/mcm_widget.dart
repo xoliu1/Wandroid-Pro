@@ -31,53 +31,34 @@ class MCMColors {
   static const darkDivider = Color(0xFF4A3828);  // 暗色分割线
   static const darkText = Color(0xFFF0DCC8);     // 暗色主文字
 
-  /// 判断当前是否为 MCM 主题
-  static bool isMCM(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    // MCM 主题的 seed color 是橙红色，primary 会接近橙红
-    return scheme.primary.red > 180 && scheme.primary.green < 130 && scheme.primary.blue < 100;
-  }
+  /// MCM 风格始终启用 — 背景、卡片、文字等基础色固定为 MCM 色板，
+  /// 强调色（primary）由用户选择，只影响按钮、链接、标签高亮等元素。
 
-  /// 根据主题返回背景色（MCM 用米色，其他用系统色）
+  /// 根据主题返回背景色 — MCM 米色/深棕
   static Color background(BuildContext context) {
-    if (isMCM(context)) {
-      return Theme.of(context).brightness == Brightness.dark ? darkSurface : cream;
-    }
-    return Theme.of(context).colorScheme.surface;
+    return Theme.of(context).brightness == Brightness.dark ? darkSurface : cream;
   }
 
-  /// 根据主题返回卡片色
+  /// 根据主题返回卡片色 — MCM 亚麻白/暗色卡片
   static Color card(BuildContext context) {
-    if (isMCM(context)) {
-      return Theme.of(context).brightness == Brightness.dark ? darkCard : surface;
-    }
-    return Theme.of(context).colorScheme.surface;
+    return Theme.of(context).brightness == Brightness.dark ? darkCard : surface;
   }
 
-  /// 根据主题返回分割线色
+  /// 根据主题返回分割线色 — MCM 分割线
   static Color dividerColor(BuildContext context) {
-    if (isMCM(context)) {
-      return Theme.of(context).brightness == Brightness.dark ? darkDivider : divider;
-    }
-    return Theme.of(context).colorScheme.outlineVariant;
+    return Theme.of(context).brightness == Brightness.dark ? darkDivider : divider;
   }
 
-  /// 根据主题返回主文字色
+  /// 根据主题返回主文字色 — MCM 深棕/暗色文字
   static Color primaryText(BuildContext context) {
-    if (isMCM(context)) {
-      return Theme.of(context).brightness == Brightness.dark ? darkText : darkBrown;
-    }
-    return Theme.of(context).colorScheme.onSurface;
+    return Theme.of(context).brightness == Brightness.dark ? darkText : darkBrown;
   }
 
-  /// 根据主题返回次要文字色
+  /// 根据主题返回次要文字色 — MCM 胡桃木
   static Color secondaryText(BuildContext context) {
-    if (isMCM(context)) {
-      return Theme.of(context).brightness == Brightness.dark
-          ? darkText.withValues(alpha: 0.6)
-          : walnut;
-    }
-    return Theme.of(context).colorScheme.onSurfaceVariant;
+    return Theme.of(context).brightness == Brightness.dark
+        ? darkText.withValues(alpha: 0.6)
+        : walnut;
   }
 }
 
