@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-04-03",
+  "categories": [
+    {
+      "name": "推荐",
+      "providers": [
+        {
+          "id": "deepseek-chat",
+          "name": "DeepSeek (推荐)",
+          "apiUrl": "https://api.deepseek.com/v1",
+          "modelId": "deepseek-chat",
+          "description": "高性价比，代码能力强，国产之光",
+          "apiKeyUrl": "https://platform.deepseek.com"
+        },
+        {
+          "id": "siliconflow-qwen",
+          "name": "硅基流动 (聚合平台)",
+          "apiUrl": "https://api.siliconflow.cn/v1",
+          "modelId": "Qwen/Qwen2.5-72B-Instruct",
+          "description": "聚合多家模型，有免费额度",
+          "apiKeyUrl": "https://cloud.siliconflow.cn"
+        }
+      ]
+    },
+    {
+      "name": "国内厂商",
+      "providers": [
+        {
+          "id": "qwen-plus",
+          "name": "通义千问 (Qwen)",
+          "apiUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+          "modelId": "qwen-plus",
+          "description": "阿里云大模型，中文能力优秀",
+          "apiKeyUrl": "https://bailian.console.aliyun.com"
+        },
+        {
+          "id": "kimi-k2",
+          "name": "Kimi / 月之暗面",
+          "apiUrl": "https://api.moonshot.cn/v1",
+          "modelId": "kimi-k2.5",
+          "description": "超长上下文，适合阅读理解",
+          "apiKeyUrl": "https://platform.moonshot.cn"
+        },
+        {
+          "id": "minimax-text",
+          "name": "MiniMax / 海螺 AI",
+          "apiUrl": "https://api.minimax.chat/v1",
+          "modelId": "MiniMax-Text-01",
+          "description": "多模态能力强",
+          "apiKeyUrl": "https://platform.minimaxi.com"
+        },
+        {
+          "id": "doubao-pro",
+          "name": "豆包 (字节跳动)",
+          "apiUrl": "https://ark.cn-beijing.volces.com/api/v3",
+          "modelId": "doubao-pro-32k",
+          "description": "字节跳动大模型，响应快速",
+          "apiKeyUrl": "https://console.volcengine.com/ark"
+        },
+        {
+          "id": "zhipu-glm4-flash",
+          "name": "智谱 GLM (ChatGLM)",
+          "apiUrl": "https://open.bigmodel.cn/api/paas/v4",
+          "modelId": "glm-4-flash",
+          "description": "免费额度，中文友好",
+          "apiKeyUrl": "https://open.bigmodel.cn"
+        }
+      ]
+    },
+    {
+      "name": "国际厂商",
+      "providers": [
+        {
+          "id": "openai-gpt4o",
+          "name": "OpenAI (GPT)",
+          "apiUrl": "https://api.openai.com/v1",
+          "modelId": "gpt-4o",
+          "description": "最流行的 AI 模型，综合能力强",
+          "apiKeyUrl": "https://platform.openai.com"
+        },
+        {
+          "id": "claude-sonnet",
+          "name": "Claude (Anthropic)",
+          "apiUrl": "https://api.anthropic.com/v1",
+          "modelId": "claude-sonnet-4-20250514",
+          "description": "擅长长文分析和代码生成",
+          "apiKeyUrl": "https://console.anthropic.com"
+        },
+        {
+          "id": "gemini-flash",
+          "name": "Gemini (Google)",
+          "apiUrl": "https://generativelanguage.googleapis.com/v1beta/openai",
+          "modelId": "gemini-2.0-flash",
+          "description": "Google 多模态模型，速度快",
+          "apiKeyUrl": "https://aistudio.google.com"
+        },
+        {
+          "id": "grok-2",
+          "name": "Grok (xAI)",
+          "apiUrl": "https://api.x.ai/v1",
+          "modelId": "grok-2-latest",
+          "description": "xAI 出品，实时信息能力强",
+          "apiKeyUrl": "https://console.x.ai"
+        }
+      ]
+    },
+    {
+      "name": "聚合平台",
+      "providers": [
+        {
+          "id": "siliconflow-qwen72b",
+          "name": "硅基流动 - Qwen2.5-72B",
+          "apiUrl": "https://api.siliconflow.cn/v1",
+          "modelId": "Qwen/Qwen2.5-72B-Instruct",
+          "description": "通义千问大杯，免费额度",
+          "apiKeyUrl": "https://cloud.siliconflow.cn"
+        }
+      ]
+    }
+  ]
+}
