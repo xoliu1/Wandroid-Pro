@@ -1,7 +1,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/remote/Api.dart';
-import 'package:notes_app/remote/service/NerworkService.dart';
+import 'package:wanandroid_pro/remote/Api.dart';
+import 'package:wanandroid_pro/remote/service/NerworkService.dart';
 import '../local/KV.dart';
 import '../model/message.dart';
 import '../providers/pagination_provider.dart';

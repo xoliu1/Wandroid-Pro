@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/pages/widget/article_card.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:wanandroid_pro/pages/widget/article_card.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/app_colors.dart';
 
 import '../../providers/chapter_provider.dart';
 

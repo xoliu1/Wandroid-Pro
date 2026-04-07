@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:notes_app/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/utils/mcm_widget.dart';
 
 /// 平台工具类 - 用于创建跨平台自适应 UI
 /// 

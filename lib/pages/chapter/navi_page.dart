@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/remote/Api.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/functions.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:wanandroid_pro/remote/Api.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/functions.dart';
+import 'package:wanandroid_pro/utils/app_colors.dart';
 import 'package:scrollview_observer/scrollview_observer.dart';
 
 import '../../model/article.dart';

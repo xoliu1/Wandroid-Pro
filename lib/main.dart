@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmkv/mmkv.dart';
-import 'package:notes_app/pages/homepage/main_page.dart';
-import 'package:notes_app/pages/login/login_page.dart';
-import 'package:notes_app/pages/transtion.dart';
-import 'package:notes_app/remote/service/NerworkService.dart';
-import 'package:notes_app/utils/auth_guard.dart';
-import 'package:notes_app/utils/theme.dart';
+import 'package:wanandroid_pro/pages/homepage/main_page.dart';
+import 'package:wanandroid_pro/pages/login/login_page.dart';
+import 'package:wanandroid_pro/pages/transtion.dart';
+import 'package:wanandroid_pro/remote/service/NerworkService.dart';
+import 'package:wanandroid_pro/utils/auth_guard.dart';
+import 'package:wanandroid_pro/utils/theme.dart';
 
 import 'local/KV.dart';
 

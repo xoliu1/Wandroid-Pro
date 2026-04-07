@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/model/note.dart';
+import 'package:wanandroid_pro/model/note.dart';
 
 import '../ai/providers/user_context_provider.dart';
 import '../model/db/sqflite.dart';

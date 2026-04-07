@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/model/Todo.dart';
+import 'package:wanandroid_pro/model/Todo.dart';
 
 import '../ai/providers/user_context_provider.dart';
 import '../remote/CgiTodo.dart';

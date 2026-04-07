@@ -1,27 +1,37 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:notes_app/model/article.dart';
-import 'package:notes_app/remote/CgiCollect.dart';
-import 'package:notes_app/ai/ui/article_webview_page.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/functions.dart';
-import 'package:notes_app/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/model/article.dart';
+import 'package:wanandroid_pro/remote/CgiCollect.dart';
+import 'package:wanandroid_pro/ai/ui/article_webview_page.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/functions.dart';
+import 'package:wanandroid_pro/utils/mcm_widget.dart';
 
-class ArticleCard extends StatelessWidget {
-   ArticleCard(
-      {super.key,
-      required this.article,
-        this.isMyCollect = false,
-      this.opcity = 0.9,
-      });
+class ArticleCard extends StatefulWidget {
+  const ArticleCard({
+    super.key,
+    required this.article,
+    this.isMyCollect = false,
+    this.opcity = 0.9,
+  });
 
   final Article article;
-
   final double opcity;
+  final bool isMyCollect;
 
-  bool isMyCollect;
+  @override
+  State<ArticleCard> createState() => _ArticleCardState();
+}
 
+class _ArticleCardState extends State<ArticleCard> {
+  late bool _isFavorite;
   final _cgiCollect = CgiCollect();
+
+  @override
+  void initState() {
+    super.initState();
+    _isFavorite = widget.article.collect;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,15 +45,15 @@ class ArticleCard extends StatelessWidget {
         Navigator.of(context).push(
           CupertinoPageRoute(
             builder: (context) => ArticleWebViewPage(
-              url: article.link,
-              title: article.title,
+              url: widget.article.link,
+              title: widget.article.title,
             ),
           ),
         );
       },
       child: Container(
       decoration: BoxDecoration(
-        color: cardBg.withOpacity(opcity),
+        color: cardBg.withOpacity(widget.opcity),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: divColor, width: 1),
         boxShadow: [
@@ -80,7 +90,7 @@ class ArticleCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          article.displayAuthor,
+                          widget.article.displayAuthor,
                           style: TextStyle(
                             fontSize: 12,
                             color: MCMColors.orange,
@@ -102,7 +112,7 @@ class ArticleCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        article.niceDate,
+                        widget.article.niceDate,
                         style: TextStyle(
                           fontSize: 12,
                           color: subColor.withOpacity(0.6),
@@ -128,7 +138,7 @@ class ArticleCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        article.title.decodeHtmlEntities(),
+                        widget.article.title.decodeHtmlEntities(),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -144,9 +154,9 @@ class ArticleCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               // 描述（如果有）
-              if (article.desc?.isNotEmpty == true) ...[
+              if (widget.article.desc?.isNotEmpty == true) ...[
                 Text(
-                  article.desc ?? "",
+                  widget.article.desc ?? "",
                   style: TextStyle(
                     fontSize: 14,
                     color: subColor,
@@ -178,7 +188,7 @@ class ArticleCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          article.displayCategory,
+                          widget.article.displayCategory,
                           style: TextStyle(
                             fontSize: 11,
                             color: MCMColors.grayBlue,
@@ -191,17 +201,19 @@ class ArticleCard extends StatelessWidget {
                   ),
                   // 右边收藏按钮
                   AnimatedFavoriteButton(
-                    isFavorite: article.collect,
+                    isFavorite: _isFavorite,
                     onTap: () async {
                       bool result;
-                      if (article.collect) {
-                        result = await _cgiCollect.uncollectArticle(article.id);
+                      if (_isFavorite) {
+                        result = await _cgiCollect.uncollectArticle(widget.article.id);
                       } else {
-                        result = await _cgiCollect.collectArticle(article.id);
+                        result = await _cgiCollect.collectArticle(widget.article.id);
                       }
-                      if (result) {
-                        article.collect = !article.collect;
-                        (context as Element).markNeedsBuild();
+                      if (result && mounted) {
+                        setState(() {
+                          _isFavorite = !_isFavorite;
+                          widget.article.collect = _isFavorite;
+                        });
                       }
                     },
                   ),

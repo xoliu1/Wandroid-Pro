@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:notes_app/model/Todo.dart';
-import 'package:notes_app/providers/task_provider.dart';
+import 'package:wanandroid_pro/model/Todo.dart';
+import 'package:wanandroid_pro/providers/task_provider.dart';
 import 'package:toastification/toastification.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:wanandroid_pro/utils/app_colors.dart';
 
 import '../../../remote/CgiTodo.dart';
 

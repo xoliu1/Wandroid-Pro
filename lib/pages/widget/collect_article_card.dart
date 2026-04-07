@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/functions.dart';
-import 'package:notes_app/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/functions.dart';
+import 'package:wanandroid_pro/utils/mcm_widget.dart';
 
 import '../../remote/Api.dart';
 

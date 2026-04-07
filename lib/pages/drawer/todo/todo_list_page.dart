@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/model/Todo.dart';
-import 'package:notes_app/pages/drawer/todo/task_editor.dart';
-import 'package:notes_app/providers/task_provider.dart';
+import 'package:wanandroid_pro/model/Todo.dart';
+import 'package:wanandroid_pro/pages/drawer/todo/task_editor.dart';
+import 'package:wanandroid_pro/providers/task_provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/app_colors.dart';
-import 'package:notes_app/utils/mcm_widget.dart';
-import 'package:notes_app/pages/drawer/todo/ai_todo_sheet.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/app_colors.dart';
+import 'package:wanandroid_pro/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/pages/drawer/todo/ai_todo_sheet.dart';
 
 enum TodoFilter {
   all,
@@ -108,6 +108,7 @@ class _TodoListPageState extends ConsumerState<TodoListPage> {
       ),
       body: Column(
         children: [
+          _buildStatsCard(state.items),
           _buildFilterSegment(filter),
           Expanded(
             child: RefreshIndicator(
@@ -117,6 +118,89 @@ class _TodoListPageState extends ConsumerState<TodoListPage> {
           ),
         ],
       ),
+    );
+  }
+
+  /// 统计看板：今日完成 / 待完成 / 逾期
+  Widget _buildStatsCard(List<Todo> allTodos) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    final total = allTodos.length;
+    final completed = allTodos.where((t) => t.status == 1).length;
+    final pending = allTodos.where((t) => t.status == 0).length;
+    final overdue = allTodos.where((t) {
+      if (t.status == 1) return false;
+      final date = DateTime.fromMillisecondsSinceEpoch(t.date);
+      return date.isBefore(today);
+    }).length;
+
+    if (total == 0) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: MCMColors.card(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: MCMColors.dividerColor(context), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: MCMColors.darkBrown.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _buildStatItem('总计', total, MCMColors.grayBlue),
+          _buildStatDivider(),
+          _buildStatItem('待完成', pending, MCMColors.mustard),
+          _buildStatDivider(),
+          _buildStatItem('已完成', completed, MCMColors.olive),
+          if (overdue > 0) ...[
+            _buildStatDivider(),
+            _buildStatItem('逾期', overdue, MCMColors.coral),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, int count, Color color) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            '$count',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: color,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: MCMColors.secondaryText(context),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatDivider() {
+    return Container(
+      width: 1,
+      height: 32,
+      color: MCMColors.dividerColor(context),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
 

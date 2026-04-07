@@ -206,8 +206,8 @@ class BrowsingHistoryDatabase {
     ''', [startOfDay]);
 
     return {
-      'count': countResult.first['count'] as int? ?? 0,
-      'totalDuration': countResult.first['total_duration'] as int? ?? 0,
+      'count': (countResult.first['count'] as num?)?.toInt() ?? 0,
+      'totalDuration': (countResult.first['total_duration'] as num?)?.toInt() ?? 0,
     };
   }
 
@@ -225,6 +225,101 @@ class BrowsingHistoryDatabase {
   Future<void> clearAll() async {
     final db = await database;
     await db.delete('browsing_history');
+  }
+
+  /// 获取指定时间范围内每天的阅读量
+  /// 返回 Map<'yyyy-MM-dd', count>
+  Future<Map<String, int>> getDailyReadCount({
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final db = await database;
+    final fromMs = DateTime(from.year, from.month, from.day).millisecondsSinceEpoch;
+    final toMs = DateTime(to.year, to.month, to.day, 23, 59, 59).millisecondsSinceEpoch;
+
+    // 注意：SQLite 的 localtime 在移动端不可靠，改用手动偏移本地时区
+    final tzOffsetSeconds = DateTime.now().timeZoneOffset.inSeconds;
+    final rows = await db.rawQuery('''
+      SELECT 
+        strftime('%Y-%m-%d', datetime((visited_at / 1000) + ?, 'unixepoch')) AS day,
+        COUNT(*) AS cnt
+      FROM browsing_history
+      WHERE visited_at >= ? AND visited_at <= ?
+      GROUP BY day
+      ORDER BY day ASC
+    ''', [tzOffsetSeconds, fromMs, toMs]);
+
+    return {for (final r in rows) r['day'] as String: ((r['cnt'] as num?)?.toInt() ?? 0)};
+  }
+
+  /// 获取 URL 域名 Top N（用于模拟"分类"统计）
+  Future<List<Map<String, dynamic>>> getTopDomains({int limit = 5}) async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+      SELECT 
+        CASE
+          WHEN url LIKE '%wanandroid.com%' THEN 'WanAndroid'
+          WHEN url LIKE '%github.com%' THEN 'GitHub'
+          WHEN url LIKE '%juejin%' THEN '掘金'
+          WHEN url LIKE '%csdn%' THEN 'CSDN'
+          WHEN url LIKE '%zhihu%' THEN '知乎'
+          WHEN url LIKE '%medium%' THEN 'Medium'
+          WHEN url LIKE '%stackoverflow%' THEN 'StackOverflow'
+          WHEN url LIKE '%developer.android%' THEN 'Android Docs'
+          WHEN url LIKE '%flutter.dev%' THEN 'Flutter Docs'
+          ELSE '其他'
+        END AS category,
+        COUNT(*) AS cnt
+      FROM browsing_history
+      GROUP BY category
+      ORDER BY cnt DESC
+      LIMIT ?
+    ''', [limit]);
+
+    return rows.map((r) => {'category': r['category'] as String, 'count': (r['cnt'] as num?)?.toInt() ?? 0}).toList();
+  }
+
+  /// 获取阅读时长分布（按时长区间分组）
+  /// 返回各区间的文章数量
+  Future<Map<String, int>> getDurationDistribution() async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+      SELECT
+        CASE
+          WHEN duration = 0 THEN '未记录'
+          WHEN duration < 30 THEN '< 30s'
+          WHEN duration < 120 THEN '30s-2min'
+          WHEN duration < 300 THEN '2-5min'
+          WHEN duration < 600 THEN '5-10min'
+          ELSE '> 10min'
+        END AS bucket,
+        COUNT(*) AS cnt
+      FROM browsing_history
+      GROUP BY bucket
+    ''');
+
+    // 按固定顺序返回
+    const order = ['未记录', '< 30s', '30s-2min', '2-5min', '5-10min', '> 10min'];
+    final raw = {for (final r in rows) r['bucket'] as String: (r['cnt'] as num?)?.toInt() ?? 0};
+    return {for (final k in order) k: raw[k] ?? 0};
+  }
+
+  /// 获取总阅读天数（有浏览记录的不同日期数）
+  Future<int> getTotalReadDays() async {
+    final db = await database;
+    final tzOffsetSeconds = DateTime.now().timeZoneOffset.inSeconds;
+    final rows = await db.rawQuery('''
+      SELECT COUNT(DISTINCT strftime('%Y-%m-%d', datetime((visited_at / 1000) + ?, 'unixepoch'))) AS days
+      FROM browsing_history
+    ''', [tzOffsetSeconds]);
+    return (rows.first['days'] as num?)?.toInt() ?? 0;
+  }
+
+  /// 获取总阅读量
+  Future<int> getTotalReadCount() async {
+    final db = await database;
+    final rows = await db.rawQuery('SELECT COUNT(*) AS cnt FROM browsing_history');
+    return (rows.first['cnt'] as num?)?.toInt() ?? 0;
   }
 
   /// 清理 30 天前的旧数据

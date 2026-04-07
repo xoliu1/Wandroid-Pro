@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/model/Todo.dart';
+import 'package:wanandroid_pro/model/Todo.dart';
 import '../remote/CgiTodo.dart';
 import 'page_provider.dart';
 

@@ -2,12 +2,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/pages/drawer/todo/todo_entry.dart';
+import 'package:wanandroid_pro/pages/drawer/todo/todo_entry.dart';
 import '../../ai/ui/ai_provider_management_page.dart';
 import '../../utils/mcm_widget.dart';
 import 'ai_daily_report_sheet.dart';
 import 'browsing_history_page.dart';
 import 'chat_history_page.dart';
+import 'profile_page.dart';
+import 'reading_stats_page.dart';
 
 import '../../local/KV.dart';
 import '../../providers/profile_provider.dart';
@@ -87,69 +89,93 @@ class HomeSlider extends ConsumerWidget {
       );
     }
     
-    // 已登录状态
+    // 已登录状态 — 可点击进入个人主页
     final profile = getUserProfile();
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
-      decoration: BoxDecoration(
-        color: bg,
-        border: Border(bottom: BorderSide(color: divColor, width: 1)),
-      ),
-      child: Column(
-        children: [
-          // MCM 装饰
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(width: 6, height: 6, decoration: const BoxDecoration(color: MCMColors.orange, shape: BoxShape.circle)),
-              const SizedBox(width: 6),
-              Container(width: 20, height: 3, decoration: BoxDecoration(color: MCMColors.mustard, borderRadius: BorderRadius.circular(2))),
-              const SizedBox(width: 6),
-              Container(width: 6, height: 6, decoration: const BoxDecoration(color: MCMColors.olive, shape: BoxShape.circle)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: MCMColors.orange.withOpacity(0.3), width: 2),
+    return GestureDetector(
+      onTap: () => navigatePlatform(context, const ProfilePage()),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+        decoration: BoxDecoration(
+          color: bg,
+          border: Border(bottom: BorderSide(color: divColor, width: 1)),
+        ),
+        child: Column(
+          children: [
+            // MCM 装饰
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: 6, height: 6, decoration: const BoxDecoration(color: MCMColors.orange, shape: BoxShape.circle)),
+                const SizedBox(width: 6),
+                Container(width: 20, height: 3, decoration: BoxDecoration(color: MCMColors.mustard, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(width: 6),
+                Container(width: 6, height: 6, decoration: const BoxDecoration(color: MCMColors.olive, shape: BoxShape.circle)),
+              ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: CircleAvatar(
-                radius: 36,
-                backgroundImage: CachedNetworkImageProvider(profile
-                        .userInfo.icon.isNotEmpty
-                    ? profile.userInfo.icon
-                    : "https://avatars.githubusercontent.com/u/126433098"),
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: MCMColors.orange.withOpacity(0.3), width: 2),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: CircleAvatar(
+                  radius: 36,
+                  backgroundImage: CachedNetworkImageProvider(profile
+                          .userInfo.icon.isNotEmpty
+                      ? profile.userInfo.icon
+                      : "https://avatars.githubusercontent.com/u/126433098"),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            profile.userInfo.publicName,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 0.5),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            profile.userInfo.email.isNotEmpty ? profile.userInfo.email : '未绑定邮箱',
-            style: TextStyle(fontSize: 13, color: subColor),
-          ),
-          const SizedBox(height: 10),
-          // MCM 风格等级标签
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: MCMColors.olive.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(20),
+            const SizedBox(height: 12),
+            Text(
+              profile.userInfo.publicName,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: textColor, letterSpacing: 0.5),
+              textAlign: TextAlign.center,
             ),
-            child: Text(
-              'Lv.${profile.coinInfo.level}  ·  排名 ${profile.coinInfo.rank}',
-              style: TextStyle(fontSize: 12, color: MCMColors.olive, fontWeight: FontWeight.w600),
+            const SizedBox(height: 6),
+            Text(
+              profile.userInfo.email.isNotEmpty ? profile.userInfo.email : '未绑定邮箱',
+              style: TextStyle(fontSize: 13, color: subColor),
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            // MCM 风格等级标签
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: MCMColors.olive.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Lv.${profile.coinInfo.level}  ·  排名 ${profile.coinInfo.rank}',
+                    style: TextStyle(fontSize: 12, color: MCMColors.olive, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: MCMColors.orange.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(CupertinoIcons.chevron_right, size: 11, color: MCMColors.orange),
+                      const SizedBox(width: 3),
+                      Text('个人主页', style: TextStyle(fontSize: 11, color: MCMColors.orange, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -176,6 +202,7 @@ class HomeSlider extends ConsumerWidget {
               _buildItem(context, 'TODO', Icons.task_alt, CupertinoIcons.checkmark_square, const TodoEntry()),
                 _buildItem(context, 'NOTE', Icons.note, CupertinoIcons.doc_text, NotesPage()),
                 _buildItem(context, '浏览历史', Icons.history, CupertinoIcons.book, const BrowsingHistoryPage()),
+                _buildItem(context, '阅读统计', Icons.bar_chart_rounded, CupertinoIcons.chart_bar_fill, const ReadingStatsPage()),
               ],
             ),
           ],

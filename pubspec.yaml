@@ -1,4 +1,4 @@
-name: notes_app
+name: wanandroid_pro
 description: 'A feature-rich mobile application for managing and organizing your tasks and notes.'
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -75,6 +75,9 @@ dependencies:
   # WebView
   flutter_inappwebview: ^6.0.0
   
+  # 获取应用版本信息
+  package_info_plus: ^8.0.0
+
   # HTML 解析
   html: ^0.15.4
   

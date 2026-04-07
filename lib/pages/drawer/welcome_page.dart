@@ -3,9 +3,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:notes_app/pages/drawer/note/note_card.dart';
-import 'package:notes_app/pages/drawer/todo/task_card.dart';
-import 'package:notes_app/providers/note_provider.dart';
+import 'package:wanandroid_pro/pages/drawer/note/note_card.dart';
+import 'package:wanandroid_pro/pages/drawer/todo/task_card.dart';
+import 'package:wanandroid_pro/providers/note_provider.dart';
 
 import '../../card_swiper/controller/card_swiper_controller.dart';
 import '../../card_swiper/enums.dart';

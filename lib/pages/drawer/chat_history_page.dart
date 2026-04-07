@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/ai/services/chat_history_db.dart';
-import 'package:notes_app/ai/models/chat_history.dart';
-import 'package:notes_app/ai/ui/article_webview_page.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:wanandroid_pro/ai/services/chat_history_db.dart';
+import 'package:wanandroid_pro/ai/models/chat_history.dart';
+import 'package:wanandroid_pro/ai/ui/article_webview_page.dart';
+import 'package:wanandroid_pro/utils/app_colors.dart';
 
 /// AI 对话历史页面
 class ChatHistoryPage extends ConsumerStatefulWidget {

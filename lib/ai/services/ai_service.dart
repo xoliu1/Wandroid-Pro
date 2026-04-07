@@ -4,6 +4,7 @@ import '../core/constants.dart';
 import '../models/ai_provider_config.dart';
 import '../models/article_content.dart';
 import '../repositories/ai_repository.dart';
+import '../../local/KV.dart';
 
 /// AI 服务 - 业务逻辑层
 /// 
@@ -57,9 +58,10 @@ class AIService {
 
     // 系统消息：文章内容
     final articleContext = _buildArticleContext(article);
+    final rolePrompt = getEffectivePrompt(kPromptChannelArticleChat);
     messages.add({
       'role': 'system',
-      'content': '你是一个专业的技术文章分析助手。以下是用户正在阅读的文章内容：\n\n$articleContext\n\n请基于这篇文章回答用户的问题。',
+      'content': '$rolePrompt\n\n以下是用户正在阅读的文章内容：\n\n$articleContext',
     });
 
     // 添加历史对话
@@ -114,14 +116,10 @@ class AIService {
   }) {
     final messages = <Map<String, String>>[];
 
+    final rolePrompt = getEffectivePrompt(kPromptChannelNoteContinue);
     messages.add({
       'role': 'system',
-      'content': '你是一个专业的写作助手。用户正在编辑一篇 Markdown 格式的笔记，请根据已有内容进行续写。\n'
-          '要求：\n'
-          '1. 保持与原文一致的写作风格和语气\n'
-          '2. 续写内容要自然衔接，逻辑连贯\n'
-          '3. 输出纯 Markdown 格式，不要添加额外的解释说明\n'
-          '4. 续写长度适中，约 100-300 字',
+      'content': rolePrompt,
     });
 
     final userContent = selectedText != null && selectedText.isNotEmpty
@@ -142,15 +140,10 @@ class AIService {
   }) {
     final messages = <Map<String, String>>[];
 
+    final rolePrompt = getEffectivePrompt(kPromptChannelNotePolish);
     messages.add({
       'role': 'system',
-      'content': '你是一个专业的文字润色助手。请对用户提供的 Markdown 文本进行润色优化。\n'
-          '要求：\n'
-          '1. 保持原文的核心意思不变\n'
-          '2. 优化语句表达，使其更加流畅、专业\n'
-          '3. 修正语法错误和不通顺的地方\n'
-          '4. 保持 Markdown 格式不变\n'
-          '5. 直接输出润色后的完整文本，不要添加任何解释说明',
+      'content': rolePrompt,
     });
 
     messages.add({
@@ -170,14 +163,8 @@ class AIService {
     final messages = <Map<String, String>>[];
 
     final systemPrompt = StringBuffer();
-    systemPrompt.writeln('你是一位资深 Android/Flutter 技术专家，擅长深入浅出地解答技术问题。');
-    systemPrompt.writeln('用户会给你一道技术问答题，请给出详细、专业的解答。');
-    systemPrompt.writeln('要求：');
-    systemPrompt.writeln('1. 先用一句话简要概括答案要点');
-    systemPrompt.writeln('2. 分点详细解释，每个要点都要有清晰的说明');
-    systemPrompt.writeln('3. 如有必要给出代码示例（使用 Markdown 代码块）');
-    systemPrompt.writeln('4. 使用 Markdown 格式输出');
-    systemPrompt.writeln('5. 语言简洁专业，避免冗余');
+    // 使用自定义 prompt（如果有）或默认值
+    systemPrompt.writeln(getEffectivePrompt(kPromptChannelQuestionExplain));
 
     if (userContext != null && userContext.isNotEmpty) {
       systemPrompt.writeln('\n以下是用户的背景信息，可以据此调整回答的深度和侧重点：');
@@ -217,8 +204,8 @@ class AIService {
     final messages = <Map<String, String>>[];
 
     final systemPrompt = StringBuffer();
-    systemPrompt.writeln('你是一个贴心的个人效率助手，负责为用户生成每日总结报告。');
-    systemPrompt.writeln('请根据用户今天的活动数据，生成一份结构化的日报。');
+    // 角色描述：使用自定义 prompt 或默认值
+    systemPrompt.writeln(getEffectivePrompt(kPromptChannelDailyReport));
     systemPrompt.writeln();
     systemPrompt.writeln('**重要**：你必须严格按照以下 JSON 格式返回结果，不要输出任何其他内容（不要输出 markdown 代码块标记）：');
     systemPrompt.writeln();

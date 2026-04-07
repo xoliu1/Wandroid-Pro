@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
-import 'package:notes_app/model/note.dart';
+import 'package:wanandroid_pro/model/note.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../ai/ui/article_webview_page.dart';
 

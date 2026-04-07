@@ -1,8 +1,8 @@
 
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/providers/pagination_provider.dart';
-import 'package:notes_app/remote/Api.dart';
+import 'package:wanandroid_pro/providers/pagination_provider.dart';
+import 'package:wanandroid_pro/remote/Api.dart';
 
 import '../remote/service/NerworkService.dart';
 

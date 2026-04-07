@@ -1,9 +1,14 @@
+import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/ai/providers/ai_daily_report_provider.dart';
-import 'package:notes_app/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/ai/providers/ai_daily_report_provider.dart';
+import 'package:wanandroid_pro/utils/mcm_widget.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:toastification/toastification.dart';
 
 /// AI 日报总结 BottomSheet
@@ -17,6 +22,10 @@ class AIDailyReportSheet extends ConsumerStatefulWidget {
 }
 
 class _AIDailyReportSheetState extends ConsumerState<AIDailyReportSheet> {
+  /// 用于截图的 GlobalKey
+  final _repaintKey = GlobalKey();
+  bool _isGeneratingImage = false;
+
   @override
   void initState() {
     super.initState();
@@ -245,7 +254,9 @@ class _AIDailyReportSheetState extends ConsumerState<AIDailyReportSheet> {
     final report = reportState.report!;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      child: Column(
+      child: RepaintBoundary(
+        key: _repaintKey,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 今日概览卡片
@@ -335,20 +346,42 @@ class _AIDailyReportSheetState extends ConsumerState<AIDailyReportSheet> {
                     },
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _buildActionButton(
                     icon: CupertinoIcons.doc_on_clipboard,
-                    label: '复制日报',
+                    label: '复制',
                     color: MCMColors.orange,
-                    filled: true,
+                    filled: false,
                     onTap: () => _copyReport(reportState.rawContent),
                   ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _isGeneratingImage
+                      ? Container(
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: MCMColors.grayBlue,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: CupertinoActivityIndicator(radius: 8),
+                          ),
+                        )
+                      : _buildActionButton(
+                          icon: CupertinoIcons.share,
+                          label: '分享图片',
+                          color: MCMColors.grayBlue,
+                          filled: true,
+                          onTap: () => _shareAsImage(reportState),
+                        ),
                 ),
               ],
             ),
           ],
         ],
+      ),
       ),
     );
   }
@@ -877,6 +910,56 @@ class _AIDailyReportSheetState extends ConsumerState<AIDailyReportSheet> {
         ],
       ),
     );
+  }
+
+  /// 将日报渲染为图片并分享
+  Future<void> _shareAsImage(AIDailyReportState reportState) async {
+    if (_isGeneratingImage) return;
+    setState(() => _isGeneratingImage = true);
+
+    try {
+      // 等待一帧确保 RepaintBoundary 已渲染
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      final boundary = _repaintKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) {
+        throw Exception('无法获取渲染对象');
+      }
+
+      // 渲染为图片（2x 分辨率）
+      final image = await boundary.toImage(pixelRatio: 2.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) throw Exception('图片数据为空');
+
+      final bytes = byteData.buffer.asUint8List();
+
+      // 写入临时文件
+      final tempDir = await getTemporaryDirectory();
+      final now = DateTime.now();
+      final fileName =
+          'daily_report_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}.png';
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsBytes(bytes);
+
+      // 分享
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'image/png')],
+        subject: 'AI 日报 - ${_todayStr()}',
+      );
+    } catch (e) {
+      if (mounted) {
+        toastification.show(
+          context: context,
+          title: Text('生成图片失败: $e'),
+          primaryColor: Colors.red,
+          showProgressBar: false,
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGeneratingImage = false);
+    }
   }
 
   void _copyReport(String content) {

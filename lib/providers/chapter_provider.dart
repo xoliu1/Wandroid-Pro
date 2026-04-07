@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/providers/pagination_provider.dart';
+import 'package:wanandroid_pro/providers/pagination_provider.dart';
 
 import '../model/article.dart';
 import '../remote/Api.dart';

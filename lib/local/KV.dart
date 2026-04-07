@@ -155,3 +155,74 @@ void clearDailyReport() {
   Kv.removeValue(KEY_DAILY_REPORT_DATE);
   Kv.removeValue(KEY_DAILY_REPORT_CONTENT);
 }
+
+// ─── AI Prompt 自定义配置 ────────────────────────────────────────────────────
+
+/// AI Prompt 渠道 key 常量
+/// 对应 ai_service.dart 中各 build*Messages 方法的 system prompt 角色描述部分
+const kPromptChannelDailyReport   = 'prompt_daily_report';
+const kPromptChannelArticleChat   = 'prompt_article_chat';
+const kPromptChannelTodoAssistant = 'prompt_todo_assistant';
+const kPromptChannelNoteContinue  = 'prompt_note_continue';
+const kPromptChannelNotePolish    = 'prompt_note_polish';
+const kPromptChannelQuestionExplain = 'prompt_question_explain';
+
+/// 所有渠道的默认 prompt（角色描述部分）
+const Map<String, String> kDefaultPrompts = {
+  kPromptChannelDailyReport:
+      '你是一个贴心的个人效率助手，负责为用户生成每日总结报告。\n请根据用户今天的活动数据，生成一份结构化的日报。',
+  kPromptChannelArticleChat:
+      '你是一个专业的技术文章分析助手。请基于用户正在阅读的文章内容回答用户的问题。',
+  kPromptChannelTodoAssistant:
+      '你是一个智能任务规划助手。你需要根据用户的上下文信息，帮助用户规划和管理待办事项。',
+  kPromptChannelNoteContinue:
+      '你是一个专业的写作助手。用户正在编辑一篇 Markdown 格式的笔记，请根据已有内容进行续写。\n'  
+      '要求：\n'
+      '1. 保持与原文一致的写作风格和语气\n'
+      '2. 续写内容要自然衔接，逻辑连贯\n'
+      '3. 输出纯 Markdown 格式，不要添加额外的解释说明\n'
+      '4. 续写长度适中，约 100-300 字',
+  kPromptChannelNotePolish:
+      '你是一个专业的文字润色助手。请对用户提供的 Markdown 文本进行润色优化。\n'
+      '要求：\n'
+      '1. 保持原文的核心意思不变\n'
+      '2. 优化语句表达，使其更加流畅、专业\n'
+      '3. 修正语法错误和不通顺的地方\n'
+      '4. 保持 Markdown 格式不变\n'
+      '5. 直接输出润色后的完整文本，不要添加任何解释说明',
+  kPromptChannelQuestionExplain:
+      '你是一位资深 Android/Flutter 技术专家，擅长深入浅出地解答技术问题。\n'
+      '用户会给你一道技术问答题，请给出详细、专业的解答。\n'
+      '要求：\n'
+      '1. 先用一句话简要概括答案要点\n'
+      '2. 分点详细解释，每个要点都要有清晰的说明\n'
+      '3. 如有必要给出代码示例（使用 Markdown 代码块）\n'
+      '4. 使用 Markdown 格式输出\n'
+      '5. 语言简洁专业，避免冗余',
+};
+
+/// 获取某渠道的自定义 prompt（没有自定义则返回 null）
+String? getCustomPrompt(String channel) {
+  return Kv.decodeString('custom_$channel');
+}
+
+/// 获取某渠道的有效 prompt（优先自定义，否则用默认值）
+String getEffectivePrompt(String channel) {
+  return getCustomPrompt(channel) ?? kDefaultPrompts[channel] ?? '';
+}
+
+/// 保存某渠道的自定义 prompt
+void saveCustomPrompt(String channel, String prompt) {
+  Kv.encodeString('custom_$channel', prompt);
+}
+
+/// 重置某渠道的 prompt 为默认值
+void resetCustomPrompt(String channel) {
+  Kv.removeValue('custom_$channel');
+}
+
+/// 是否有自定义 prompt
+bool hasCustomPrompt(String channel) {
+  final v = Kv.decodeString('custom_$channel');
+  return v != null && v.isNotEmpty;
+}

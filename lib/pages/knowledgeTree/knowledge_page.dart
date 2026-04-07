@@ -2,9 +2,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/pages/knowledgeTree/tree_article_page.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/pages/knowledgeTree/tree_article_page.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/mcm_widget.dart';
 
 import '../../providers/chapter_provider.dart';
 import '../../remote/Api.dart';

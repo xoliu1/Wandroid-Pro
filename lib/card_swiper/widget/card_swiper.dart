@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
-import 'package:notes_app/card_swiper/utils/number_extension.dart';
+import 'package:wanandroid_pro/card_swiper/utils/number_extension.dart';
 
 import '../card_animation.dart';
 import '../controller/card_swiper_controller.dart';

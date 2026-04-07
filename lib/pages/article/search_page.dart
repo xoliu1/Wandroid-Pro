@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/pages/article/search_results_page.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/pages/article/search_results_page.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/mcm_widget.dart';
 
 import '../../local/SearchHistoryManager.dart';
 import '../../remote/Api.dart';

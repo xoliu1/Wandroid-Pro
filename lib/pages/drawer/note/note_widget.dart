@@ -2,10 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:notes_app/model/note.dart';
-import 'package:notes_app/providers/note_provider.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/model/note.dart';
+import 'package:wanandroid_pro/providers/note_provider.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/mcm_widget.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:toastification/toastification.dart';
 

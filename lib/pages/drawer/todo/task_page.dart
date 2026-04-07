@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/model/Todo.dart';
-import 'package:notes_app/pages/drawer/todo/task_card.dart';
-import 'package:notes_app/providers/page_provider.dart';
+import 'package:wanandroid_pro/model/Todo.dart';
+import 'package:wanandroid_pro/pages/drawer/todo/task_card.dart';
+import 'package:wanandroid_pro/providers/page_provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:wanandroid_pro/utils/app_colors.dart';
 
 import 'add_task_widget.dart';
 

@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/pages/wxmp/wx_article_tab_content.dart';
-import 'package:notes_app/providers/wx_article_provider.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:wanandroid_pro/pages/wxmp/wx_article_tab_content.dart';
+import 'package:wanandroid_pro/providers/wx_article_provider.dart';
+import 'package:wanandroid_pro/utils/app_colors.dart';
 
 class WxArticleTabsPage extends ConsumerStatefulWidget {
   const WxArticleTabsPage({super.key});

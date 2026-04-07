@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/model/note.dart';
-import 'package:notes_app/providers/note_provider.dart';
-import 'package:notes_app/utils/functions.dart' show randId;
+import 'package:wanandroid_pro/model/note.dart';
+import 'package:wanandroid_pro/providers/note_provider.dart';
+import 'package:wanandroid_pro/utils/functions.dart' show randId;
 
 
 class NoteEditor extends ConsumerWidget {

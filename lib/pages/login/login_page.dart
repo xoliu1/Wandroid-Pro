@@ -4,9 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/functions.dart';
-import 'package:notes_app/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/functions.dart';
+import 'package:wanandroid_pro/utils/mcm_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../gen/assets.gen.dart';

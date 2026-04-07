@@ -2,10 +2,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/ai/services/browsing_history_db.dart';
-import 'package:notes_app/ai/ui/article_webview_page.dart';
-import 'package:notes_app/utils/app_colors.dart';
-import 'package:notes_app/utils/platform_utils.dart';
+import 'package:wanandroid_pro/ai/services/browsing_history_db.dart';
+import 'package:wanandroid_pro/ai/ui/article_webview_page.dart';
+import 'package:wanandroid_pro/utils/app_colors.dart';
+import 'package:wanandroid_pro/utils/platform_utils.dart';
 
 /// 浏览历史页面
 class BrowsingHistoryPage extends ConsumerStatefulWidget {

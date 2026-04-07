@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:wanandroid_pro/utils/app_colors.dart';
 
 import 'daily_question_page.dart';
 import 'square_page.dart';

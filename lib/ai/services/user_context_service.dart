@@ -1,13 +1,13 @@
 import 'package:flutter/cupertino.dart';
-import 'package:notes_app/ai/models/user_context.dart';
-import 'package:notes_app/ai/services/browsing_history_db.dart';
-import 'package:notes_app/ai/services/chat_history_db.dart';
-import 'package:notes_app/ai/services/user_context_db.dart';
-import 'package:notes_app/local/KV.dart';
-import 'package:notes_app/model/db/sqflite.dart';
-import 'package:notes_app/remote/Api.dart';
-import 'package:notes_app/remote/CgiTodo.dart';
-import 'package:notes_app/remote/service/NerworkService.dart';
+import 'package:wanandroid_pro/ai/models/user_context.dart';
+import 'package:wanandroid_pro/ai/services/browsing_history_db.dart';
+import 'package:wanandroid_pro/ai/services/chat_history_db.dart';
+import 'package:wanandroid_pro/ai/services/user_context_db.dart';
+import 'package:wanandroid_pro/local/KV.dart';
+import 'package:wanandroid_pro/model/db/sqflite.dart';
+import 'package:wanandroid_pro/remote/Api.dart';
+import 'package:wanandroid_pro/remote/CgiTodo.dart';
+import 'package:wanandroid_pro/remote/service/NerworkService.dart';
 
 /// 用户上下文采集服务
 /// 
@@ -113,7 +113,7 @@ class UserContextService {
     }
   }
 
-  /// 采集笔记摘要（本地 DB，最近 10 条，取前 50 字）
+  /// 采集笔记摘要（本地 DB，最近 10 条，取前 100 字）
   static Future<List<String>> _collectNoteSummaries() async {
     try {
       await Db.init();
@@ -122,7 +122,7 @@ class UserContextService {
           .take(10)
           .map((n) {
             final content = n['content'] as String? ?? '';
-            return content.length > 50 ? content.substring(0, 50) : content;
+            return content.length > 100 ? '${content.substring(0, 100)}...' : content;
           })
           .where((s) => s.isNotEmpty)
           .toList();

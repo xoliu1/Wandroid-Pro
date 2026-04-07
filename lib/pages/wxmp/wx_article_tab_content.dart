@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/pages/widget/wx_article_card.dart';
-import 'package:notes_app/providers/wx_article_provider.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/functions.dart';
+import 'package:wanandroid_pro/pages/widget/wx_article_card.dart';
+import 'package:wanandroid_pro/providers/wx_article_provider.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/functions.dart';
 
 import '../../ai/ui/article_webview_page.dart';
 

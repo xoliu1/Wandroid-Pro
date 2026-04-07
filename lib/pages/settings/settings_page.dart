@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/local/KV.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/mcm_widget.dart';
-import 'package:notes_app/utils/theme.dart';
+import 'package:wanandroid_pro/local/KV.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/utils/theme.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -16,6 +17,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _useNewTodoUI = true;
   bool _aiStyleMorphing = true;
   bool _showExtractDebugDialog = false;
+  String _appVersion = '1.0.0';
 
   @override
   void initState() {
@@ -28,6 +30,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       _useNewTodoUI = getUseNewTodoUI();
       _aiStyleMorphing = getAIStyleMorphing();
       _showExtractDebugDialog = getShowExtractDebugDialog();
+    });
+    // 异步读取版本号
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) {
+        setState(() {
+          _appVersion = '${info.version} (${info.buildNumber})';
+        });
+      }
     });
   }
 
@@ -116,6 +126,24 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       _buildAccentColorTile(context, currentAccent, textColor, subColor, divColor),
                     ],
                   ),
+                  _buildMCMSectionLabel('AI 配置'),
+                  _buildMCMCard(
+                    context,
+                    cardBg: cardBg,
+                    divColor: divColor,
+                    children: [
+                      _buildMCMTile(
+                        context,
+                        icon: Icons.tune_rounded,
+                        iconColor: MCMColors.grayBlue,
+                        title: '自定义 AI Prompt',
+                        subtitle: '调整各功能的 AI 角色描述',
+                        textColor: textColor,
+                        subColor: subColor,
+                        onTap: () => _showPromptEditor(context),
+                      ),
+                    ],
+                  ),
                   _buildMCMSectionLabel('调试选项'),
                   _buildMCMCard(
                     context,
@@ -162,7 +190,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             Expanded(
                               child: Text('版本', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor)),
                             ),
-                            Text('1.0.0', style: TextStyle(fontSize: 14, color: subColor, fontWeight: FontWeight.w500)),
+            Text(_appVersion, style: TextStyle(fontSize: 14, color: subColor, fontWeight: FontWeight.w500)),
                           ],
                         ),
                       ),
@@ -263,6 +291,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     required IconData icon,
     required Color iconColor,
     required String title,
+    String? subtitle,
     required Color textColor,
     required Color subColor,
     required VoidCallback onTap,
@@ -284,7 +313,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor)),
+                  if (subtitle != null)
+                    Text(subtitle, style: TextStyle(fontSize: 12, color: subColor)),
+                ],
+              ),
             ),
             Icon(Icons.chevron_right_rounded, color: MCMColors.mustard.withOpacity(0.6), size: 20),
           ],
@@ -347,6 +383,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       }
     }
     return '自定义';
+  }
+
+  /// 显示 AI Prompt 编辑器
+  void _showPromptEditor(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const _PromptEditorPage()),
+    );
   }
 
   Future<void> _showThemePicker(BuildContext context, WidgetRef ref) async {
@@ -502,6 +546,366 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
         );
       },
+    );
+  }
+}
+
+// ─── AI Prompt 编辑页 ────────────────────────────────────────────────────────
+
+/// 各渠道的显示名称和图标
+const _kPromptChannelMeta = [
+  (
+    channel: kPromptChannelDailyReport,
+    label: '每日日报',
+    icon: Icons.summarize_rounded,
+    color: MCMColors.olive,
+  ),
+  (
+    channel: kPromptChannelArticleChat,
+    label: '文章问答',
+    icon: Icons.chat_bubble_outline_rounded,
+    color: MCMColors.grayBlue,
+  ),
+  (
+    channel: kPromptChannelTodoAssistant,
+    label: 'Todo 助手',
+    icon: Icons.task_alt_rounded,
+    color: MCMColors.mustard,
+  ),
+  (
+    channel: kPromptChannelNoteContinue,
+    label: '笔记续写',
+    icon: Icons.edit_note_rounded,
+    color: MCMColors.orange,
+  ),
+  (
+    channel: kPromptChannelNotePolish,
+    label: '笔记润色',
+    icon: Icons.auto_fix_high_rounded,
+    color: MCMColors.coral,
+  ),
+  (
+    channel: kPromptChannelQuestionExplain,
+    label: '问题解答',
+    icon: Icons.lightbulb_outline_rounded,
+    color: MCMColors.grayBlue,
+  ),
+];
+
+class _PromptEditorPage extends StatelessWidget {
+  const _PromptEditorPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = MCMColors.primaryText(context);
+    final subColor = MCMColors.secondaryText(context);
+    final bg = MCMColors.background(context);
+    final cardBg = MCMColors.card(context);
+    final divColor = MCMColors.dividerColor(context);
+
+    return Scaffold(
+      backgroundColor: bg,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            MCMHeader(
+              title: 'AI PROMPT',
+              subtitle: '自定义各功能的 AI 角色描述',
+              leading: MCMBackButton(),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                    child: Text(
+                      '修改后将覆盖默认 Prompt，留空则恢复默认。',
+                      style: TextStyle(fontSize: 13, color: subColor),
+                    ),
+                  ),
+                  ..._kPromptChannelMeta.map((meta) => _PromptChannelTile(
+                        channel: meta.channel,
+                        label: meta.label,
+                        icon: meta.icon,
+                        color: meta.color,
+                        textColor: textColor,
+                        subColor: subColor,
+                        cardBg: cardBg,
+                        divColor: divColor,
+                      )),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 单个渠道的 Prompt 配置项
+class _PromptChannelTile extends StatefulWidget {
+  final String channel;
+  final String label;
+  final IconData icon;
+  final Color color;
+  final Color textColor;
+  final Color subColor;
+  final Color cardBg;
+  final Color divColor;
+
+  const _PromptChannelTile({
+    required this.channel,
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.textColor,
+    required this.subColor,
+    required this.cardBg,
+    required this.divColor,
+  });
+
+  @override
+  State<_PromptChannelTile> createState() => _PromptChannelTileState();
+}
+
+class _PromptChannelTileState extends State<_PromptChannelTile> {
+  late bool _isCustom;
+
+  @override
+  void initState() {
+    super.initState();
+    _isCustom = hasCustomPrompt(widget.channel);
+  }
+
+  void _openEditDialog() async {
+    final current = getEffectivePrompt(widget.channel);
+    final controller = TextEditingController(text: current);
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            decoration: BoxDecoration(
+              color: widget.cardBg,
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 拖拽条
+                    Center(
+                      child: Container(
+                        width: 36, height: 4,
+                        decoration: BoxDecoration(
+                          color: widget.divColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Container(
+                          width: 32, height: 32,
+                          decoration: BoxDecoration(
+                            color: widget.color.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(widget.icon, color: widget.color, size: 16),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          widget.label,
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            color: widget.textColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: widget.divColor.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextField(
+                        controller: controller,
+                        maxLines: 8,
+                        style: TextStyle(fontSize: 13, color: widget.textColor, height: 1.6),
+                        decoration: InputDecoration(
+                          hintText: '输入自定义 Prompt，留空恢复默认...',
+                          hintStyle: TextStyle(color: widget.subColor.withOpacity(0.5), fontSize: 13),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.all(14),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        // 重置按钮
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              resetCustomPrompt(widget.channel);
+                              Navigator.pop(ctx);
+                              setState(() => _isCustom = false);
+                            },
+                            child: Container(
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: widget.divColor.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                '恢复默认',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: widget.subColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        // 保存按钮
+                        Expanded(
+                          flex: 2,
+                          child: GestureDetector(
+                            onTap: () {
+                              final text = controller.text.trim();
+                              if (text.isEmpty) {
+                                resetCustomPrompt(widget.channel);
+                                setState(() => _isCustom = false);
+                              } else {
+                                saveCustomPrompt(widget.channel, text);
+                                setState(() => _isCustom = true);
+                              }
+                              Navigator.pop(ctx);
+                            },
+                            child: Container(
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: widget.color,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              alignment: Alignment.center,
+                              child: const Text(
+                                '保存',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _openEditDialog,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: widget.cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: widget.divColor, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: MCMColors.darkBrown.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36, height: 36,
+              decoration: BoxDecoration(
+                color: widget.color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(widget.icon, color: widget.color, size: 18),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.label,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: widget.textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _isCustom ? '已自定义' : '使用默认',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _isCustom ? widget.color : widget.subColor,
+                      fontWeight: _isCustom ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_isCustom)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: widget.color.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '已修改',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: widget.color,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right_rounded, color: MCMColors.mustard.withOpacity(0.6), size: 20),
+          ],
+        ),
+      ),
     );
   }
 }

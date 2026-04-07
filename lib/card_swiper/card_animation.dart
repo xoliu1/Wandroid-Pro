@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/widgets.dart';
-import 'package:notes_app/card_swiper/properties/allowed_swipe_direction.dart';
+import 'package:wanandroid_pro/card_swiper/properties/allowed_swipe_direction.dart';
 
 import 'enums.dart';
 

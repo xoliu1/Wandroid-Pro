@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/remote/CgiCollect.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/mcm_widget.dart';
-import 'package:notes_app/utils/platform_utils.dart';
+import 'package:wanandroid_pro/remote/CgiCollect.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/utils/platform_utils.dart';
 
 import '../../providers/collect_provider.dart';
 import '../widget/collect_article_card.dart';

@@ -1,15 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:notes_app/utils/animations.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/pages/article/article_list_page.dart';
-import 'package:notes_app/pages/chapter/chapter_page.dart';
-import 'package:notes_app/pages/project_list_page.dart';
-import 'package:notes_app/pages/ai/ai_chat_page.dart';
-import 'package:notes_app/providers/project_provider.dart';
-import 'package:notes_app/providers/wx_article_provider.dart';
-import 'package:notes_app/remote/CgiUser.dart';
+import 'package:wanandroid_pro/pages/article/article_list_page.dart';
+import 'package:wanandroid_pro/pages/chapter/chapter_page.dart';
+import 'package:wanandroid_pro/pages/project_list_page.dart';
+import 'package:wanandroid_pro/pages/ai/ai_chat_page.dart';
+import 'package:wanandroid_pro/providers/project_provider.dart';
+import 'package:wanandroid_pro/providers/wx_article_provider.dart';
+import 'package:wanandroid_pro/remote/CgiUser.dart';
 
 import '../../ai/providers/user_context_provider.dart';
 import '../../ai/services/browsing_history_db.dart';

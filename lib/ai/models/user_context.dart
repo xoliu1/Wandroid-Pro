@@ -77,40 +77,44 @@ class UserContext {
   });
 
   /// 转为 AI prompt 可用的文本摘要
+  /// 
+  /// 注意：browsingTitles 是历史浏览偏好（非今日），
+  /// 今日浏览记录由 _collectDailyData() 单独采集传入 dailyData。
   String toPromptSummary() {
     final buffer = StringBuffer();
     buffer.writeln('用户: $username (等级$level, 积分$coinCount)');
     
     if (collectTitles.isNotEmpty) {
-      buffer.writeln('\n最近收藏的文章:');
+      buffer.writeln('\n【历史收藏偏好】（反映长期兴趣方向）:');
       for (final t in collectTitles.take(10)) {
         buffer.writeln('- $t');
       }
     }
     
     if (noteSummaries.isNotEmpty) {
-      buffer.writeln('\n最近的笔记:');
+      buffer.writeln('\n【笔记知识库】（反映用户的知识积累）:');
       for (final n in noteSummaries.take(5)) {
         buffer.writeln('- $n');
       }
     }
     
     if (pendingTodos.isNotEmpty) {
-      buffer.writeln('\n当前待办:');
+      buffer.writeln('\n【当前待办】:');
       for (final t in pendingTodos) {
         buffer.writeln('- [${t.priorityLabel}] ${t.title}${t.content.isNotEmpty ? ": ${t.content}" : ""}');
       }
     }
     
     if (chatTopics.isNotEmpty) {
-      buffer.writeln('\n最近AI对话主题:');
+      buffer.writeln('\n【近期 AI 对话主题】（反映近期关注点）:');
       for (final c in chatTopics.take(5)) {
         buffer.writeln('- $c');
       }
     }
     
     if (browsingTitles.isNotEmpty) {
-      buffer.writeln('\n最近浏览的文章:');
+      // 注意：这是历史浏览偏好，不含今日浏览（今日浏览在 dailyData 中单独列出）
+      buffer.writeln('\n【历史浏览偏好】（近期阅读倾向，不含今日）:');
       for (final b in browsingTitles.take(10)) {
         buffer.writeln('- $b');
       }

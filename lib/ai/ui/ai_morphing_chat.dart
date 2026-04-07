@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
-import 'package:notes_app/providers/note_provider.dart';
+import 'package:wanandroid_pro/providers/note_provider.dart';
 
 import '../models/article_content.dart';
 import '../models/chat_message.dart';

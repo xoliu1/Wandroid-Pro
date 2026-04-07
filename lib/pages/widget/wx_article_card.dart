@@ -1,11 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:notes_app/model/project.dart';
-import 'package:notes_app/remote/CgiCollect.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/model/project.dart';
+import 'package:wanandroid_pro/remote/CgiCollect.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/mcm_widget.dart';
 
-class WxArticleCard extends StatelessWidget {
+class WxArticleCard extends StatefulWidget {
   final ProjectArticle article;
   final VoidCallback? onTap;
 
@@ -16,6 +16,19 @@ class WxArticleCard extends StatelessWidget {
   });
 
   @override
+  State<WxArticleCard> createState() => _WxArticleCardState();
+}
+
+class _WxArticleCardState extends State<WxArticleCard> {
+  late bool _isFavorite;
+
+  @override
+  void initState() {
+    super.initState();
+    _isFavorite = widget.article.collect;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final textColor = MCMColors.primaryText(context);
     final subColor = MCMColors.secondaryText(context);
@@ -23,7 +36,7 @@ class WxArticleCard extends StatelessWidget {
     final divColor = MCMColors.dividerColor(context);
 
     return PressableScale(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
@@ -65,7 +78,7 @@ class WxArticleCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          article.author.isNotEmpty ? article.author : '匿名',
+                          widget.article.author.isNotEmpty ? widget.article.author : '匿名',
                           style: const TextStyle(
                             fontSize: 12,
                             color: MCMColors.orange,
@@ -87,7 +100,7 @@ class WxArticleCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        article.niceShareDate,
+                        widget.article.niceShareDate,
                         style: TextStyle(
                           fontSize: 12,
                           color: subColor.withOpacity(0.6),
@@ -113,7 +126,7 @@ class WxArticleCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        article.title,
+                        widget.article.title,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -128,10 +141,10 @@ class WxArticleCard extends StatelessWidget {
                 ),
               ),
               // 描述（如果有）
-              if (article.desc.isNotEmpty) ...[
+              if (widget.article.desc.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(
-                  article.desc,
+                  widget.article.desc,
                   style: TextStyle(
                     fontSize: 14,
                     color: subColor,
@@ -147,20 +160,21 @@ class WxArticleCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   AnimatedFavoriteButton(
-                    isFavorite: article.collect,
+                    isFavorite: _isFavorite,
                     size: 18,
                     onTap: () async {
                       final cgiCollect = CgiCollect();
                       bool result;
-                      if (article.collect) {
-                        result =
-                            await cgiCollect.uncollectArticle(article.id);
+                      if (_isFavorite) {
+                        result = await cgiCollect.uncollectArticle(widget.article.id);
                       } else {
-                        result = await cgiCollect.collectArticle(article.id);
+                        result = await cgiCollect.collectArticle(widget.article.id);
                       }
-                      if (result) {
-                        article.collect = !article.collect;
-                        (context as Element).markNeedsBuild();
+                      if (result && mounted) {
+                        setState(() {
+                          _isFavorite = !_isFavorite;
+                          widget.article.collect = _isFavorite;
+                        });
                       }
                     },
                   ),

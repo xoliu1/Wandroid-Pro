@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/model/db/sqflite.dart';
-import 'package:notes_app/model/note.dart';
+import 'package:wanandroid_pro/model/db/sqflite.dart';
+import 'package:wanandroid_pro/model/note.dart';
 import '../core/logger.dart';
 import '../core/constants.dart';
 import '../models/ai_provider_config.dart';

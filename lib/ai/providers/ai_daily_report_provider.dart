@@ -2,13 +2,15 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:notes_app/ai/providers/ai_provider_manager.dart';
-import 'package:notes_app/ai/providers/user_context_provider.dart';
-import 'package:notes_app/ai/services/ai_service.dart';
-import 'package:notes_app/ai/services/browsing_history_db.dart';
-import 'package:notes_app/local/KV.dart';
-import 'package:notes_app/model/db/sqflite.dart';
-import 'package:notes_app/remote/CgiTodo.dart';
+import 'package:wanandroid_pro/ai/providers/ai_provider_manager.dart';
+import 'package:wanandroid_pro/ai/providers/user_context_provider.dart';
+import 'package:wanandroid_pro/ai/services/ai_service.dart';
+import 'package:wanandroid_pro/ai/services/browsing_history_db.dart';
+import 'package:wanandroid_pro/local/KV.dart';
+import 'package:wanandroid_pro/model/db/sqflite.dart';
+import 'package:wanandroid_pro/remote/Api.dart';
+import 'package:wanandroid_pro/remote/CgiTodo.dart';
+import 'package:wanandroid_pro/remote/service/NerworkService.dart';
 
 /// 日报阅读板块
 class DailyReadingSection {
@@ -281,17 +283,20 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
       _collectTodayBrowsing(),
       _collectTodayTodos(),
       _collectTodayNotes(),
+      _collectTodayCollects(),
     ]);
 
     final browsingData = results[0];
     final todoData = results[1];
     final noteData = results[2];
+    final collectData = results[3];
 
     buffer.writeln('📅 日期：${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}');
+    buffer.writeln('⏰ 当前时间段：${_getTimeOfDay(now)}');
     buffer.writeln();
 
     if (browsingData.isNotEmpty) {
-      buffer.writeln('📖 今日浏览记录：');
+      buffer.writeln('📖 今日浏览记录（仅今日，与历史偏好不同）：');
       buffer.writeln(browsingData);
       buffer.writeln();
     }
@@ -308,12 +313,29 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
       buffer.writeln();
     }
 
+    if (collectData.isNotEmpty) {
+      buffer.writeln('🔖 今日新增收藏：');
+      buffer.writeln(collectData);
+      buffer.writeln();
+    }
+
     // 如果所有数据都为空
-    if (browsingData.isEmpty && todoData.isEmpty && noteData.isEmpty) {
+    if (browsingData.isEmpty && todoData.isEmpty && noteData.isEmpty && collectData.isEmpty) {
       return '';
     }
 
     return buffer.toString();
+  }
+
+  /// 获取当前时间段描述
+  String _getTimeOfDay(DateTime now) {
+    final hour = now.hour;
+    if (hour >= 5 && hour < 9) return '清晨（${now.hour}:${now.minute.toString().padLeft(2, '0')}）';
+    if (hour >= 9 && hour < 12) return '上午（${now.hour}:${now.minute.toString().padLeft(2, '0')}）';
+    if (hour >= 12 && hour < 14) return '中午（${now.hour}:${now.minute.toString().padLeft(2, '0')}）';
+    if (hour >= 14 && hour < 18) return '下午（${now.hour}:${now.minute.toString().padLeft(2, '0')}）';
+    if (hour >= 18 && hour < 22) return '晚上（${now.hour}:${now.minute.toString().padLeft(2, '0')}）';
+    return '深夜（${now.hour}:${now.minute.toString().padLeft(2, '0')}）';
   }
 
   /// 采集今日浏览记录
@@ -416,6 +438,41 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
       return buffer.toString();
     } catch (e) {
       debugPrint('📊 采集今日笔记失败: $e');
+      return '';
+    }
+  }
+
+  /// 采集今日新增收藏
+  Future<String> _collectTodayCollects() async {
+    try {
+      final req = CollectListReq(page: 0, pageSize: 20);
+      final resp = await NetworkService.get<CollectListResp>(
+        url: req.path,
+        fromJsonT: CollectListResp.fromJson,
+      ).getData();
+
+      final today = DateTime.now();
+      final todayStr =
+          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+      // 过滤今日收藏（niceDate 包含今日日期）
+      final todayCollects = resp.datas.where((a) {
+        return a.niceDate.contains(todayStr) ||
+            a.niceDate.startsWith('${today.month}月${today.day}日') ||
+            a.niceDate.contains('小时前') ||
+            a.niceDate.contains('分钟前');
+      }).toList();
+
+      if (todayCollects.isEmpty) return '';
+
+      final buffer = StringBuffer();
+      buffer.writeln('- 今日新增 ${todayCollects.length} 篇收藏：');
+      for (final a in todayCollects) {
+        buffer.writeln('  🔖 ${a.title}');
+      }
+      return buffer.toString();
+    } catch (e) {
+      debugPrint('📊 采集今日收藏失败: $e');
       return '';
     }
   }

@@ -4,13 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
-import 'package:notes_app/ai/providers/ai_question_provider.dart';
-import 'package:notes_app/model/article.dart';
-import 'package:notes_app/remote/CgiCollect.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/functions.dart';
+import 'package:wanandroid_pro/ai/providers/ai_question_provider.dart';
+import 'package:wanandroid_pro/model/article.dart';
+import 'package:wanandroid_pro/remote/CgiCollect.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/functions.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:notes_app/utils/app_colors.dart';
+import 'package:wanandroid_pro/utils/app_colors.dart';
 import '../../ai/ui/article_webview_page.dart';
 
 class QuestionCard extends ConsumerStatefulWidget {

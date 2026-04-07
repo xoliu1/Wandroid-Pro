@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/providers/profile_provider.dart';
-import 'package:notes_app/utils/animations.dart';
-import 'package:notes_app/utils/platform_utils.dart';
+import 'package:wanandroid_pro/providers/profile_provider.dart';
+import 'package:wanandroid_pro/utils/animations.dart';
+import 'package:wanandroid_pro/utils/platform_utils.dart';
 
 import '../../remote/Api.dart';
 

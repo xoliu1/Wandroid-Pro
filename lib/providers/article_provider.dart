@@ -1,8 +1,8 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notes_app/local/KV.dart';
-import 'package:notes_app/model/article.dart';
-import 'package:notes_app/providers/pagination_provider.dart';
+import 'package:wanandroid_pro/local/KV.dart';
+import 'package:wanandroid_pro/model/article.dart';
+import 'package:wanandroid_pro/providers/pagination_provider.dart';
 
 import '../remote/Api.dart';
 import '../remote/CgiArticle.dart';
