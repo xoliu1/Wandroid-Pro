@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:wanandroid_pro/ai/services/browsing_history_db.dart';
@@ -32,6 +33,9 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
   int _totalCount = 0;
   int _todayCount = 0;
 
+  // 热力图数据（全年）
+  Map<String, int> _yearData = {};
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +51,9 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
       // 本月：1号到今天
       final monthStart = DateTime(now.year, now.month, 1);
 
+      // 热力图：过去一年
+      final yearStart = DateTime(now.year - 1, now.month, now.day + 1);
+
       final results = await Future.wait([
         _db.getDailyReadCount(from: weekStart, to: now),
         _db.getDailyReadCount(from: monthStart, to: now),
@@ -55,6 +62,7 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
         _db.getTotalReadDays(),
         _db.getTotalReadCount(),
         _db.getTodayStats(),
+        _db.getDailyReadCount(from: yearStart, to: now),
       ]);
 
       setState(() {
@@ -66,6 +74,7 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
         _totalCount = results[5] as int;
         final todayStats = results[6] as Map<String, dynamic>;
         _todayCount = todayStats['count'] as int;
+        _yearData = results[7] as Map<String, int>;
         _isLoading = false;
       });
     } catch (e, st) {
@@ -119,6 +128,10 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
                     children: [
                       // 总览卡片
                       _buildOverviewCards(textColor, subColor, cardBg, divColor),
+                      const SizedBox(height: 8),
+
+                      // 年度热力图
+                      _buildHeatmapSection(textColor, subColor, cardBg, divColor),
                       const SizedBox(height: 8),
 
                       // 折线图 Tab
@@ -194,6 +207,93 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
         ),
       ),
     );
+  }
+
+  // ─── 年度热力图 ─────────────────────────────────────────────────────────────
+
+  Widget _buildHeatmapSection(Color textColor, Color subColor, Color cardBg, Color divColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: divColor, width: 1),
+          boxShadow: [BoxShadow(color: MCMColors.darkBrown.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 28, height: 28,
+                    decoration: BoxDecoration(color: MCMColors.olive.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
+                    child: const Icon(CupertinoIcons.flame_fill, size: 14, color: MCMColors.olive),
+                  ),
+                  const SizedBox(width: 8),
+                  Text('年度阅读热力图', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: textColor)),
+                  const Spacer(),
+                  Text('过去 365 天', style: TextStyle(fontSize: 11, color: subColor)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            // 热力图
+            SizedBox(
+              height: 130,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: CustomPaint(
+                  painter: _HeatmapPainter(
+                    data: _yearData,
+                    cellColor: MCMColors.olive,
+                    emptyColor: divColor.withOpacity(0.5),
+                    labelColor: subColor,
+                    isDark: Theme.of(context).brightness == Brightness.dark,
+                  ),
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ),
+            // 图例
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text('少', style: TextStyle(fontSize: 10, color: subColor)),
+                  const SizedBox(width: 4),
+                  ..._buildLegendCells(divColor),
+                  const SizedBox(width: 4),
+                  Text('多', style: TextStyle(fontSize: 10, color: subColor)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildLegendCells(Color divColor) {
+    final colors = [
+      divColor.withOpacity(0.5),
+      MCMColors.olive.withOpacity(0.2),
+      MCMColors.olive.withOpacity(0.4),
+      MCMColors.olive.withOpacity(0.7),
+      MCMColors.olive,
+    ];
+    return colors.map((c) => Container(
+      width: 12, height: 12,
+      margin: const EdgeInsets.symmetric(horizontal: 1),
+      decoration: BoxDecoration(
+        color: c,
+        borderRadius: BorderRadius.circular(2),
+      ),
+    )).toList();
   }
 
   // ─── 折线图 ──────────────────────────────────────────────────────────────────
@@ -597,4 +697,123 @@ class _LineChartPainter extends CustomPainter {
   @override
   bool shouldRepaint(_LineChartPainter old) =>
       old.entries != entries || old.maxVal != maxVal;
+}
+
+// ─── 热力图 Painter（GitHub 风格） ──────────────────────────────────────────
+
+class _HeatmapPainter extends CustomPainter {
+  final Map<String, int> data;
+  final Color cellColor;
+  final Color emptyColor;
+  final Color labelColor;
+  final bool isDark;
+
+  _HeatmapPainter({
+    required this.data,
+    required this.cellColor,
+    required this.emptyColor,
+    required this.labelColor,
+    this.isDark = false,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const leftPadding = 28.0; // 左侧星期标签
+    const topPadding = 16.0;  // 顶部月份标签
+    const cellGap = 2.0;
+
+    final availableW = size.width - leftPadding;
+    final availableH = size.height - topPadding;
+
+    // 计算格子大小：7 行（周一到周日），约 53 列（52 周 + 当前周）
+    const rows = 7;
+    final cellSize = math.min((availableH - cellGap * (rows - 1)) / rows, (availableW - cellGap * 52) / 53);
+    final effectiveCellSize = cellSize.clamp(6.0, 14.0);
+
+    // 计算最大值用于颜色映射
+    final maxVal = data.values.isEmpty ? 1 : data.values.reduce((a, b) => a > b ? a : b);
+    final effectiveMax = maxVal == 0 ? 1 : maxVal;
+
+    // 从今天往前推 365 天
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // 找到 365 天前的那个周日（作为起始点）
+    final startDate = today.subtract(const Duration(days: 364));
+    final startSunday = startDate.subtract(Duration(days: startDate.weekday % 7));
+
+    // 绘制星期标签
+    const weekLabels = ['', '一', '', '三', '', '五', ''];
+    for (int r = 0; r < rows; r++) {
+      if (weekLabels[r].isNotEmpty) {
+        final tp = TextPainter(
+          text: TextSpan(text: weekLabels[r], style: TextStyle(fontSize: 9, color: labelColor)),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        tp.paint(canvas, Offset(0, topPadding + r * (effectiveCellSize + cellGap) + (effectiveCellSize - tp.height) / 2));
+      }
+    }
+
+    // 绘制格子
+    int lastMonth = -1;
+    var currentDate = startSunday;
+    int col = 0;
+
+    while (!currentDate.isAfter(today)) {
+      final row = currentDate.weekday % 7; // 0=周日, 1=周一, ..., 6=周六
+
+      // 月份标签
+      if (currentDate.month != lastMonth && row == 0) {
+        lastMonth = currentDate.month;
+        const monthNames = ['', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+        final tp = TextPainter(
+          text: TextSpan(text: monthNames[currentDate.month], style: TextStyle(fontSize: 9, color: labelColor)),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        final x = leftPadding + col * (effectiveCellSize + cellGap);
+        if (x + tp.width < size.width) {
+          tp.paint(canvas, Offset(x, 0));
+        }
+      }
+
+      final x = leftPadding + col * (effectiveCellSize + cellGap);
+      final y = topPadding + row * (effectiveCellSize + cellGap);
+
+      // 获取当天数据
+      final dateKey = '${currentDate.year}-${currentDate.month.toString().padLeft(2, '0')}-${currentDate.day.toString().padLeft(2, '0')}';
+      final count = data[dateKey] ?? 0;
+
+      // 颜色映射
+      Color color;
+      if (count == 0) {
+        color = emptyColor;
+      } else {
+        final ratio = count / effectiveMax;
+        if (ratio <= 0.25) {
+          color = cellColor.withOpacity(0.2);
+        } else if (ratio <= 0.5) {
+          color = cellColor.withOpacity(0.4);
+        } else if (ratio <= 0.75) {
+          color = cellColor.withOpacity(0.7);
+        } else {
+          color = cellColor;
+        }
+      }
+
+      // 绘制圆角矩形
+      final rect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(x, y, effectiveCellSize, effectiveCellSize),
+        Radius.circular(effectiveCellSize * 0.2),
+      );
+      canvas.drawRRect(rect, Paint()..color = color);
+
+      // 下一天
+      currentDate = currentDate.add(const Duration(days: 1));
+      if (currentDate.weekday % 7 == 0) col++; // 新的一周
+    }
+  }
+
+  @override
+  bool shouldRepaint(_HeatmapPainter old) =>
+      old.data != data || old.cellColor != cellColor;
 }

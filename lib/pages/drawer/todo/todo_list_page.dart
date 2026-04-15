@@ -10,6 +10,7 @@ import 'package:wanandroid_pro/utils/animations.dart';
 import 'package:wanandroid_pro/utils/app_colors.dart';
 import 'package:wanandroid_pro/utils/mcm_widget.dart';
 import 'package:wanandroid_pro/pages/drawer/todo/ai_todo_sheet.dart';
+import 'package:wanandroid_pro/pages/drawer/todo/pomodoro_page.dart';
 
 enum TodoFilter {
   all,
@@ -94,6 +95,15 @@ class _TodoListPageState extends ConsumerState<TodoListPage> {
       appBar: AppBar(
         title: const Text('待办事项'),
         actions: [
+          // 番茄钟专注按钮
+          IconButton(
+            icon: const Icon(CupertinoIcons.timer, size: 22),
+            tooltip: '番茄钟专注',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PomodoroPage()),
+            ),
+          ),
           // AI 智能助手按钮
           IconButton(
             icon: const Icon(CupertinoIcons.sparkles, size: 22),

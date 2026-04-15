@@ -6,6 +6,7 @@ import 'package:wanandroid_pro/pages/drawer/todo/todo_entry.dart';
 import '../../ai/ui/ai_provider_management_page.dart';
 import '../../utils/mcm_widget.dart';
 import 'ai_daily_report_sheet.dart';
+import 'ai_weekly_report_page.dart';
 import 'browsing_history_page.dart';
 import 'chat_history_page.dart';
 import 'profile_page.dart';
@@ -236,6 +237,7 @@ class HomeSlider extends ConsumerWidget {
               _buildItem(context, 'AI 配置', Icons.auto_awesome, CupertinoIcons.sparkles, const AIProviderManagementPage()),
               _buildItem(context, 'AI 对话历史', Icons.history, CupertinoIcons.chat_bubble_2, const ChatHistoryPage()),
               _buildDailyReportItem(context),
+              _buildItem(context, 'AI 周报', Icons.date_range, CupertinoIcons.calendar_badge_plus, const AIWeeklyReportPage()),
               _buildThemeItem(context, ref),
               _buildItem(context, '设置', Icons.settings, CupertinoIcons.settings, const SettingsPage()),
             ],
