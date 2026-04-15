@@ -6,6 +6,7 @@ import 'package:wanandroid_pro/ai/ui/article_webview_page.dart';
 import 'package:wanandroid_pro/utils/animations.dart';
 import 'package:wanandroid_pro/utils/functions.dart';
 import 'package:wanandroid_pro/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/utils/responsive.dart';
 
 class ArticleCard extends StatefulWidget {
   const ArticleCard({
@@ -40,7 +41,8 @@ class _ArticleCardState extends State<ArticleCard> {
     final cardBg = MCMColors.card(context);
     final divColor = MCMColors.dividerColor(context);
 
-    return PressableScale(
+    return HoverEffect(
+      child: PressableScale(
       onTap: () {
         Navigator.of(context).push(
           CupertinoPageRoute(
@@ -223,6 +225,7 @@ class _ArticleCardState extends State<ArticleCard> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

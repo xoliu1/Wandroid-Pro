@@ -6,6 +6,7 @@ import 'package:wanandroid_pro/pages/widget/article_banner.dart';
 import 'package:wanandroid_pro/providers/article_provider.dart';
 import 'package:wanandroid_pro/utils/animations.dart';
 import 'package:wanandroid_pro/utils/mcm_widget.dart';
+import 'package:wanandroid_pro/utils/responsive.dart';
 
 class ArticleListPage extends ConsumerStatefulWidget {
   const ArticleListPage({super.key});
@@ -125,7 +126,8 @@ class _ArticleListPageState extends ConsumerState<ArticleListPage>
                 );
               }
 
-              return ListView.builder(
+              return ConstrainedContent(
+                child: ListView.builder(
                 controller: _scrollController,
                 itemCount: articles.length + 2,
                 itemBuilder: (context, index) {
@@ -194,6 +196,7 @@ class _ArticleListPageState extends ConsumerState<ArticleListPage>
                     ),
                   );
                 },
+              ),
               );
             },
           );

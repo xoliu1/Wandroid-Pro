@@ -16,6 +16,21 @@ class PlatformUtils {
   
   /// 是否为 Apple 平台 (iOS/macOS)
   static bool get isApple => Platform.isIOS || Platform.isMacOS;
+  
+  /// 是否为 macOS 平台
+  static bool get isMacOS => Platform.isMacOS;
+  
+  /// 是否为 Windows 平台
+  static bool get isWindows => Platform.isWindows;
+  
+  /// 是否为 Linux 平台
+  static bool get isLinux => Platform.isLinux;
+  
+  /// 是否为桌面平台 (macOS/Windows/Linux)
+  static bool get isDesktop => Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+  
+  /// 是否为移动平台 (iOS/Android)
+  static bool get isMobile => Platform.isIOS || Platform.isAndroid;
 }
 
 /// 平台自适应 Scaffold

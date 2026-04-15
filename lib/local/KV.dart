@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:mmkv/mmkv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,7 +35,67 @@ const KEY_ACCENT_COLOR = 'accent_color';
 
 final Future<SharedPreferences> SP = SharedPreferences.getInstance();
 
-final Kv = MMKV.defaultMMKV();
+// ─── 桌面端 KV 适配层 ────────────────────────────────────────────────────────
+// MMKV 不支持 macOS/Windows/Linux，桌面端用 SharedPreferences 同步包装替代
+
+/// 桌面端 KV 存储（用 SharedPreferences 同步包装）
+/// 在 main() 中调用 DesktopKv.init() 预加载后，所有读写均为同步操作
+class _DesktopKv {
+  static SharedPreferences? _prefs;
+
+  static Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  bool encodeBool(String key, bool value) {
+    _prefs?.setBool(key, value);
+    return true;
+  }
+
+  bool decodeBool(String key, {bool defaultValue = false}) {
+    return _prefs?.getBool(key) ?? defaultValue;
+  }
+
+  bool encodeString(String key, String value) {
+    _prefs?.setString(key, value);
+    return true;
+  }
+
+  String? decodeString(String key) {
+    return _prefs?.getString(key);
+  }
+
+  bool encodeInt(String key, int value) {
+    _prefs?.setInt(key, value);
+    return true;
+  }
+
+  int decodeInt(String key, {int defaultValue = 0}) {
+    return _prefs?.getInt(key) ?? defaultValue;
+  }
+
+  bool removeValue(String key) {
+    _prefs?.remove(key);
+    return true;
+  }
+}
+
+/// 初始化桌面端 KV（仅桌面平台调用）
+Future<void> initDesktopKv() async {
+  await _DesktopKv.init();
+}
+
+/// 全局 KV 存储实例
+/// - 移动端（Android/iOS）：使用 MMKV（高性能）
+/// - 桌面端（macOS/Windows/Linux）：使用 SharedPreferences 包装
+dynamic get Kv {
+  if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
+    return _desktopKv;
+  }
+  return MMKV.defaultMMKV();
+}
+
+final _desktopKv = _DesktopKv();
 
 void loginLocal(bool logined) {
   Kv.encodeBool(KEY_USER_LOGINED, logined);

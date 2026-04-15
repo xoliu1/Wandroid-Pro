@@ -617,8 +617,11 @@ Future<void> _handleLogout(BuildContext context, WidgetRef ref) async {
       // 关闭加载指示器
       Navigator.pop(context);
       
-      // 关闭侧边栏
-      Navigator.pop(context);
+      // 移动端：侧边栏是 Drawer，在路由栈里，需要 pop 关闭
+      // 桌面端：侧边栏是常驻嵌入式布局，不在路由栈，不能 pop
+      if (!PlatformUtils.isDesktop) {
+        Navigator.pop(context);
+      }
       
       // 显示成功提示
       await showPlatformDialog(
@@ -659,7 +662,11 @@ Future<void> _handleLogout(BuildContext context, WidgetRef ref) async {
             text: '确定',
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(context); // 关闭侧边栏
+              // 移动端：侧边栏是 Drawer，需要 pop 关闭
+              // 桌面端：侧边栏常驻，不在路由栈，不能 pop
+              if (!PlatformUtils.isDesktop) {
+                Navigator.pop(context);
+              }
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginPage()),

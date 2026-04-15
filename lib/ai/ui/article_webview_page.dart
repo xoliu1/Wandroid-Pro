@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/article_content.dart';
 import '../providers/ai_chat_provider.dart';
@@ -82,6 +84,12 @@ class _ArticleWebViewPageState extends ConsumerState<ArticleWebViewPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Windows 桌面端降级：使用系统浏览器打开文章
+    // flutter_inappwebview 不支持 Windows，macOS 正常使用
+    if (Platform.isWindows) {
+      return _buildWindowsFallback(context);
+    }
+
     // 🌙 读取 App 主题设置（而非系统主题）
     final themeMode = ref.watch(themeModeProvider);
     final isDarkMode = themeMode == ThemeMode.dark ||
@@ -454,6 +462,81 @@ class _ArticleWebViewPageState extends ConsumerState<ArticleWebViewPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Windows 桌面端降级页面
+  /// 由于 flutter_inappwebview 不支持 Windows，使用系统浏览器打开文章
+  Widget _buildWindowsFallback(BuildContext context) {
+    // 自动在系统浏览器中打开
+    Future.microtask(() async {
+      final uri = Uri.parse(widget.url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    });
+
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: Text(
+          widget.title ?? '文章阅读',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+      child: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  CupertinoIcons.globe,
+                  size: 64,
+                  color: CupertinoColors.systemGrey,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  '已在系统浏览器中打开',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.url,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: CupertinoColors.secondaryLabel,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CupertinoButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('返回'),
+                    ),
+                    const SizedBox(width: 16),
+                    CupertinoButton.filled(
+                      onPressed: () async {
+                        final uri = Uri.parse(widget.url);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                      child: const Text('重新打开'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

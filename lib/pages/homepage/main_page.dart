@@ -10,6 +10,8 @@ import 'package:wanandroid_pro/pages/ai/ai_chat_page.dart';
 import 'package:wanandroid_pro/providers/project_provider.dart';
 import 'package:wanandroid_pro/providers/wx_article_provider.dart';
 import 'package:wanandroid_pro/remote/CgiUser.dart';
+import 'package:wanandroid_pro/utils/responsive.dart';
+import 'dart:io';
 
 import '../../ai/providers/user_context_provider.dart';
 import '../../ai/services/browsing_history_db.dart';
@@ -137,35 +139,41 @@ class _MainPageState extends ConsumerState<MainPage>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final barBg = isDark ? const Color(0xFF2C2416) : const Color(0xFF3A2D1F);
     final barBorder = isDark ? const Color(0xFF4A3828) : const Color(0xFF6B5D4F);
+    final isWide = Responsive.isWideScreen(context);
+    // 桌面平台（macOS/Windows）始终显示侧边栏，不依赖窗口宽度
+    final isDesktopPlatform = !kIsWeb && (Platform.isMacOS || Platform.isWindows);
+    final isDesktopLayout = isDesktopPlatform || Responsive.isDesktop(context);
 
     return Scaffold(
       backgroundColor: colorTheme.surface,
-      drawer: const HomeSlider(),
+      // 桌面端不使用 Drawer，侧边栏常驻
+      drawer: isDesktopLayout ? null : const HomeSlider(),
       onDrawerChanged: (isOpened) {
-        // Drawer 关闭时主动清除焦点，防止 IndexedStack 中的 TextField 意外获取焦点导致键盘弹出
         if (!isOpened) {
           FocusManager.instance.primaryFocus?.unfocus();
         }
       },
       appBar: AppBar(
         backgroundColor: colorTheme.surface,
-        leading: Builder(
-          builder: (context) {
-            return GestureDetector(
-              onTap: () => Scaffold.of(context).openDrawer(),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: MCMColors.orange.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.menu_rounded, size: 20),
-                ),
+        leading: isDesktopLayout
+            ? null // 桌面端不需要汉堡菜单按钮
+            : Builder(
+                builder: (context) {
+                  return GestureDetector(
+                    onTap: () => Scaffold.of(context).openDrawer(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: MCMColors.orange.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.menu_rounded, size: 20),
+                      ),
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
         centerTitle: true,
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -217,57 +225,80 @@ class _MainPageState extends ConsumerState<MainPage>
           ),
         ],
       ),
-      body: Stack(
-          children: [
-            IndexedStack(
-              index: _tabController.index,
-              children: pages,
+      body: Row(
+        children: [
+          // 桌面端：侧边栏常驻
+          if (isDesktopLayout)
+            SizedBox(
+              width: Responsive.sidebarWidth(context),
+              child: const HomeSlider(),
             ),
-            Positioned(
-              bottom: 10,
-              left: 0,
-              right: 0,
-              child: SlideUpEntrance(
-                child: Center(
-                  child: Container(
-                    width: MediaQuery.of(context).size.width * 0.92,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(22),
-                      color: barBg,
-                      border: Border.all(color: barBorder.withOpacity(0.3), width: 1),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF2C2416).withOpacity(0.25),
-                          blurRadius: 16,
-                          spreadRadius: 0,
-                          offset: const Offset(0, 4),
+          // 桌面端：侧边栏与内容区之间的分割线
+          if (isDesktopLayout)
+            VerticalDivider(
+              width: 1,
+              thickness: 1,
+              color: MCMColors.dividerColor(context),
+            ),
+          // 内容区
+          Expanded(
+            child: Stack(
+              children: [
+                IndexedStack(
+                  index: _tabController.index,
+                  children: pages,
+                ),
+                // 底部导航栏
+                Positioned(
+                  bottom: 10,
+                  left: 0,
+                  right: 0,
+                  child: SlideUpEntrance(
+                    child: Center(
+                      child: Container(
+                        width: isWide
+                            ? 480 // 宽屏固定宽度，避免过度拉伸
+                            : MediaQuery.of(context).size.width * 0.92,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(22),
+                          color: barBg,
+                          border: Border.all(color: barBorder.withOpacity(0.3), width: 1),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF2C2416).withOpacity(0.25),
+                              blurRadius: 16,
+                              spreadRadius: 0,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: TabBar(
-                    controller: _tabController,
-                    indicator: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: MCMColors.orange, width: 2.5),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicator: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: MCMColors.orange, width: 2.5),
+                            ),
+                          ),
+                          dividerColor: Colors.transparent,
+                          labelColor: MCMColors.orange,
+                          unselectedLabelColor: const Color(0xFFA08B78),
+                          tabs: [
+                            _buildTab(0, CupertinoIcons.news_solid),
+                            _buildTab(1, CupertinoIcons.map_fill),
+                            _buildTab(2, CupertinoIcons.chat_bubble_2_fill),
+                            _buildTab(3, CupertinoIcons.square_grid_2x2_fill),
+                            _buildTab(4, Icons.wechat),
+                            _buildTab(5, CupertinoIcons.folder_fill),
+                          ],
+                        ),
                       ),
                     ),
-                    dividerColor: Colors.transparent,
-                    labelColor: MCMColors.orange,
-                    unselectedLabelColor: const Color(0xFFA08B78),
-                    tabs: [
-                      _buildTab(0, CupertinoIcons.news_solid),
-                      _buildTab(1, CupertinoIcons.map_fill),
-                      _buildTab(2, CupertinoIcons.chat_bubble_2_fill),
-                      _buildTab(3, CupertinoIcons.square_grid_2x2_fill),
-                      _buildTab(4, Icons.wechat),
-                      _buildTab(5, CupertinoIcons.folder_fill),
-                    ],
-                  ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
+        ],
       ),
     );
   }

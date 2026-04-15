@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mmkv/mmkv.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:wanandroid_pro/pages/homepage/main_page.dart';
 import 'package:wanandroid_pro/pages/login/login_page.dart';
 import 'package:wanandroid_pro/pages/transtion.dart';
@@ -34,7 +35,19 @@ void main() async {
     };
   }
   
-  await MMKV.initialize();
+  // 桌面端初始化 sqflite_ffi（macOS/Windows/Linux 不支持原生 sqflite）
+  if (defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.linux ||
+      defaultTargetPlatform == TargetPlatform.macOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    // MMKV 不支持桌面端，改用 SharedPreferences 包装
+    await initDesktopKv();
+  } else {
+    // 移动端（Android/iOS）使用 MMKV
+    await MMKV.initialize();
+  }
+  
   await NetworkService.init();
   
   // 创建全局 ProviderContainer 并注册到 AuthGuard
