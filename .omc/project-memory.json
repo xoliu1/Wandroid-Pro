@@ -1,0 +1,179 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1776672590685,
+  "projectRoot": "/Users/xoliu/AndroidStudioProjects/flutter_wanandroid",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "assets",
+      "docs",
+      "lib",
+      "test"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "android": {
+      "path": "android",
+      "purpose": null,
+      "fileCount": 9,
+      "lastAccessed": 1776672590680,
+      "keyFiles": [
+        "build.gradle",
+        "flutter_wanandroid_android.iml",
+        "gradle.properties",
+        "gradlew",
+        "gradlew.bat"
+      ]
+    },
+    "assets": {
+      "path": "assets",
+      "purpose": "Static assets",
+      "fileCount": 2,
+      "lastAccessed": 1776672590680,
+      "keyFiles": [
+        "ai_providers.json"
+      ]
+    },
+    "build": {
+      "path": "build",
+      "purpose": "Build output",
+      "fileCount": 4,
+      "lastAccessed": 1776672590680,
+      "keyFiles": [
+        "c0072de10826baaa280a066f5b17102c.cache.dill.track.dill",
+        "f27a92a4b5bcafe4a74dc01702fa95cd.cache.dill.track.dill",
+        "last_build_run.json"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 5,
+      "lastAccessed": 1776672590680,
+      "keyFiles": [
+        "ARCHITECTURE_DIAGRAM.md",
+        "DEVELOPMENT_GUIDE.md",
+        "QUICK_REFERENCE.md",
+        "README.md",
+        "UI_STYLE_GUIDE.md"
+      ]
+    },
+    "ios": {
+      "path": "ios",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1776672590681,
+      "keyFiles": [
+        "Podfile"
+      ]
+    },
+    "lib": {
+      "path": "lib",
+      "purpose": "Library code",
+      "fileCount": 2,
+      "lastAccessed": 1776672590681,
+      "keyFiles": [
+        "main.dart"
+      ]
+    },
+    "macos": {
+      "path": "macos",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1776672590681,
+      "keyFiles": [
+        "Podfile"
+      ]
+    },
+    "test": {
+      "path": "test",
+      "purpose": "Test files",
+      "fileCount": 0,
+      "lastAccessed": 1776672590681,
+      "keyFiles": []
+    },
+    "web": {
+      "path": "web",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1776672590681,
+      "keyFiles": [
+        "favicon.png",
+        "index.html",
+        "manifest.json"
+      ]
+    },
+    "windows": {
+      "path": "windows",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1776672590681,
+      "keyFiles": [
+        "CMakeLists.txt"
+      ]
+    },
+    "android/app": {
+      "path": "android/app",
+      "purpose": "Application code",
+      "fileCount": 1,
+      "lastAccessed": 1776672590681,
+      "keyFiles": [
+        "build.gradle"
+      ]
+    },
+    "build/app": {
+      "path": "build/app",
+      "purpose": "Application code",
+      "fileCount": 0,
+      "lastAccessed": 1776672590681,
+      "keyFiles": []
+    },
+    "lib/pages": {
+      "path": "lib/pages",
+      "purpose": "Page components",
+      "fileCount": 3,
+      "lastAccessed": 1776672590682,
+      "keyFiles": [
+        "project_list_page.dart",
+        "transtion.dart"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "README.md",
+      "accessCount": 2,
+      "lastAccessed": 1776672641327,
+      "type": "file"
+    },
+    {
+      "path": "pubspec.yaml",
+      "accessCount": 2,
+      "lastAccessed": 1776672641432,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
