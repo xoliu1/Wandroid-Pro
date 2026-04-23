@@ -229,6 +229,18 @@ class ProjectArticle {
       'zan': zan,
     };
   }
+
+  /// 分类显示文本
+  String get displayCategory {
+    if (superChapterName.isNotEmpty && chapterName.isNotEmpty) {
+      return '$superChapterName/$chapterName';
+    } else if (superChapterName.isNotEmpty) {
+      return superChapterName;
+    } else if (chapterName.isNotEmpty) {
+      return chapterName;
+    }
+    return '未分类';
+  }
 }
 
 /// 项目标签数据模型

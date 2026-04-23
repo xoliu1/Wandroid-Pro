@@ -9,6 +9,7 @@ class BrowsingRecord {
   final String title;
   final int visitedAt; // 毫秒时间戳
   final int duration; // 浏览时长（秒），0 表示未记录
+  final String category; // 文章分类
 
   BrowsingRecord({
     this.id,
@@ -16,6 +17,7 @@ class BrowsingRecord {
     required this.title,
     required this.visitedAt,
     this.duration = 0,
+    this.category = '',
   });
 
   Map<String, dynamic> toMap() => {
@@ -23,6 +25,7 @@ class BrowsingRecord {
     'title': title,
     'visited_at': visitedAt,
     'duration': duration,
+    'category': category,
   };
 
   factory BrowsingRecord.fromMap(Map<String, dynamic> map) => BrowsingRecord(
@@ -31,6 +34,7 @@ class BrowsingRecord {
     title: map['title'] as String? ?? '',
     visitedAt: map['visited_at'] as int? ?? 0,
     duration: map['duration'] as int? ?? 0,
+    category: map['category'] as String? ?? '',
   );
 
   /// 浏览时间的 DateTime
@@ -62,8 +66,9 @@ class BrowsingHistoryDatabase {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // 升级到版本 2
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -74,7 +79,8 @@ class BrowsingHistoryDatabase {
         url TEXT NOT NULL,
         title TEXT NOT NULL DEFAULT '',
         visited_at INTEGER NOT NULL,
-        duration INTEGER NOT NULL DEFAULT 0
+        duration INTEGER NOT NULL DEFAULT 0,
+        category TEXT NOT NULL DEFAULT ''
       )
     ''');
     // 为 visited_at 创建索引，加速按时间查询
@@ -82,10 +88,19 @@ class BrowsingHistoryDatabase {
         'CREATE INDEX idx_browsing_visited_at ON browsing_history(visited_at)');
   }
 
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // 添加 category 字段
+      await db.execute('ALTER TABLE browsing_history ADD COLUMN category TEXT NOT NULL DEFAULT \'\'');
+      debugPrint('📖 数据库升级: 添加 category 字段');
+    }
+  }
+
   /// 记录一次浏览（防重复：5秒内同 URL 不重复插入）
   Future<void> recordVisit({
     required String url,
     String title = '',
+    String category = '',
   }) async {
     final db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -105,8 +120,9 @@ class BrowsingHistoryDatabase {
       'title': title,
       'visited_at': now,
       'duration': 0,
+      'category': category,
     });
-    debugPrint('📖 记录浏览: $title ($url)');
+    debugPrint('📖 记录浏览: $title ($category)');
   }
 
   /// 更新最近一条记录的标题（用于内容提取后补充标题）
@@ -252,25 +268,15 @@ class BrowsingHistoryDatabase {
     return {for (final r in rows) r['day'] as String: ((r['cnt'] as num?)?.toInt() ?? 0)};
   }
 
-  /// 获取 URL 域名 Top N（用于模拟"分类"统计）
+  /// 获取分类 Top N（基于文章分类统计）
   Future<List<Map<String, dynamic>>> getTopDomains({int limit = 5}) async {
     final db = await database;
     final rows = await db.rawQuery('''
       SELECT 
-        CASE
-          WHEN url LIKE '%wanandroid.com%' THEN 'WanAndroid'
-          WHEN url LIKE '%github.com%' THEN 'GitHub'
-          WHEN url LIKE '%juejin%' THEN '掘金'
-          WHEN url LIKE '%csdn%' THEN 'CSDN'
-          WHEN url LIKE '%zhihu%' THEN '知乎'
-          WHEN url LIKE '%medium%' THEN 'Medium'
-          WHEN url LIKE '%stackoverflow%' THEN 'StackOverflow'
-          WHEN url LIKE '%developer.android%' THEN 'Android Docs'
-          WHEN url LIKE '%flutter.dev%' THEN 'Flutter Docs'
-          ELSE '其他'
-        END AS category,
+        category,
         COUNT(*) AS cnt
       FROM browsing_history
+      WHERE category != ''
       GROUP BY category
       ORDER BY cnt DESC
       LIMIT ?

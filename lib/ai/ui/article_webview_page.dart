@@ -22,11 +22,13 @@ import 'ai_provider_management_page.dart';
 class ArticleWebViewPage extends ConsumerStatefulWidget {
   final String url;
   final String? title;
+  final String? category;
 
   const ArticleWebViewPage({
     super.key,
     required this.url,
     this.title = "",
+    this.category,
   });
 
   @override
@@ -73,6 +75,7 @@ class _ArticleWebViewPageState extends ConsumerState<ArticleWebViewPage> {
       BrowsingHistoryDatabase().recordVisit(
         url: widget.url,
         title: widget.title ?? '',
+        category: widget.category ?? '',
       );
     });
   }

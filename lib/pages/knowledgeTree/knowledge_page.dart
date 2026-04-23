@@ -11,7 +11,7 @@ import '../../providers/chapter_provider.dart';
 import '../../remote/Api.dart';
 
 /// 知识体系视图模式
-final knowledgeViewModeProvider = StateProvider<bool>((ref) => false); // false=列表, true=图谱
+final knowledgeViewModeProvider = StateProvider<bool>((ref) => true); // false=列表, true=图谱
 
 /// 知识体系 - 目录
 class KnowledgeSystemTab extends ConsumerWidget {

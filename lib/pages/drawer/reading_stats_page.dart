@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:wanandroid_pro/ai/services/browsing_history_db.dart';
@@ -35,11 +34,20 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
 
   // 热力图数据（全年）
   Map<String, int> _yearData = {};
+  
+  // 热力图滚动控制器
+  final ScrollController _heatmapScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _heatmapScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -77,6 +85,13 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
         _yearData = results[7] as Map<String, int>;
         _isLoading = false;
       });
+      
+      // 数据加载完成后，滚动到最右侧（最近日期）
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_heatmapScrollController.hasClients) {
+          _heatmapScrollController.jumpTo(_heatmapScrollController.position.maxScrollExtent);
+        }
+      });
     } catch (e, st) {
       debugPrint('❌ 阅读统计加载失败: $e\n$st');
       setState(() => _isLoading = false);
@@ -94,6 +109,28 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
       current = current.add(const Duration(days: 1));
     }
     return result;
+  }
+
+  /// 计算热力图的实际尺寸
+  Size _calculateHeatmapSize() {
+    const leftPadding = 28.0;
+    const topPadding = 16.0;
+    const cellGap = 2.0;
+    const rows = 7;
+    const cellSize = 12.0; // 固定格子大小
+    
+    // 计算需要多少列（从 365 天前到今天，按周划分）
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final startDate = today.subtract(const Duration(days: 364));
+    final startSunday = startDate.subtract(Duration(days: startDate.weekday % 7));
+    final totalDays = today.difference(startSunday).inDays + 1;
+    final cols = (totalDays / 7).ceil();
+    
+    final width = leftPadding + cols * (cellSize + cellGap);
+    final height = topPadding + rows * (cellSize + cellGap);
+    
+    return Size(width, height);
   }
 
   @override
@@ -241,10 +278,12 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
               ),
             ),
             const SizedBox(height: 12),
-            // 热力图
+            // 热力图（可横向滚动）
             SizedBox(
               height: 130,
-              child: Padding(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                controller: _heatmapScrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: CustomPaint(
                   painter: _HeatmapPainter(
@@ -254,7 +293,7 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
                     labelColor: subColor,
                     isDark: Theme.of(context).brightness == Brightness.dark,
                   ),
-                  child: const SizedBox.expand(),
+                  size: _calculateHeatmapSize(),
                 ),
               ),
             ),
@@ -721,14 +760,7 @@ class _HeatmapPainter extends CustomPainter {
     const leftPadding = 28.0; // 左侧星期标签
     const topPadding = 16.0;  // 顶部月份标签
     const cellGap = 2.0;
-
-    final availableW = size.width - leftPadding;
-    final availableH = size.height - topPadding;
-
-    // 计算格子大小：7 行（周一到周日），约 53 列（52 周 + 当前周）
-    const rows = 7;
-    final cellSize = math.min((availableH - cellGap * (rows - 1)) / rows, (availableW - cellGap * 52) / 53);
-    final effectiveCellSize = cellSize.clamp(6.0, 14.0);
+    const cellSize = 12.0; // 固定格子大小
 
     // 计算最大值用于颜色映射
     final maxVal = data.values.isEmpty ? 1 : data.values.reduce((a, b) => a > b ? a : b);
@@ -744,13 +776,14 @@ class _HeatmapPainter extends CustomPainter {
 
     // 绘制星期标签
     const weekLabels = ['', '一', '', '三', '', '五', ''];
+    const rows = 7;
     for (int r = 0; r < rows; r++) {
       if (weekLabels[r].isNotEmpty) {
         final tp = TextPainter(
           text: TextSpan(text: weekLabels[r], style: TextStyle(fontSize: 9, color: labelColor)),
           textDirection: TextDirection.ltr,
         )..layout();
-        tp.paint(canvas, Offset(0, topPadding + r * (effectiveCellSize + cellGap) + (effectiveCellSize - tp.height) / 2));
+        tp.paint(canvas, Offset(0, topPadding + r * (cellSize + cellGap) + (cellSize - tp.height) / 2));
       }
     }
 
@@ -770,14 +803,12 @@ class _HeatmapPainter extends CustomPainter {
           text: TextSpan(text: monthNames[currentDate.month], style: TextStyle(fontSize: 9, color: labelColor)),
           textDirection: TextDirection.ltr,
         )..layout();
-        final x = leftPadding + col * (effectiveCellSize + cellGap);
-        if (x + tp.width < size.width) {
-          tp.paint(canvas, Offset(x, 0));
-        }
+        final x = leftPadding + col * (cellSize + cellGap);
+        tp.paint(canvas, Offset(x, 0));
       }
 
-      final x = leftPadding + col * (effectiveCellSize + cellGap);
-      final y = topPadding + row * (effectiveCellSize + cellGap);
+      final x = leftPadding + col * (cellSize + cellGap);
+      final y = topPadding + row * (cellSize + cellGap);
 
       // 获取当天数据
       final dateKey = '${currentDate.year}-${currentDate.month.toString().padLeft(2, '0')}-${currentDate.day.toString().padLeft(2, '0')}';
@@ -802,8 +833,8 @@ class _HeatmapPainter extends CustomPainter {
 
       // 绘制圆角矩形
       final rect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(x, y, effectiveCellSize, effectiveCellSize),
-        Radius.circular(effectiveCellSize * 0.2),
+        Rect.fromLTWH(x, y, cellSize, cellSize),
+        Radius.circular(cellSize * 0.2),
       );
       canvas.drawRRect(rect, Paint()..color = color);
 

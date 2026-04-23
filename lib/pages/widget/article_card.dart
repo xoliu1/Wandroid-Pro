@@ -47,6 +47,7 @@ class _ArticleCardState extends State<ArticleCard> {
             builder: (context) => ArticleWebViewPage(
               url: widget.article.link,
               title: widget.article.title,
+              category: widget.article.displayCategory,
             ),
           ),
         );

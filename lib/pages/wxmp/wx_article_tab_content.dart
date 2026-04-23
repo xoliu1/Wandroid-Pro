@@ -143,6 +143,7 @@ class _WxArticleTabContentState extends ConsumerState<WxArticleTabContent>
                             builder: (context) => ArticleWebViewPage(
                               url: article.link,
                               title: article.title,
+                              category: article.displayCategory,
                             ),
                           ),
                         );

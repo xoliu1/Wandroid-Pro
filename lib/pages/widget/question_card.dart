@@ -74,6 +74,7 @@ class _QuestionCardState extends ConsumerState<QuestionCard> {
             builder: (context) => ArticleWebViewPage(
               url: article.link,
               title: article.title,
+              category: article.displayCategory,
             ),
           ),
         );
