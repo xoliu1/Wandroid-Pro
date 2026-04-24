@@ -11,6 +11,8 @@ const KEY_COOKIE_EXPIRED = 'cookie_expired';
 
 const KEY_USER_INFO = 'user_info';
 
+const KEY_SKIP_LOGIN = 'skip_login'; // 用户是否选择跳过登录
+
 const keyThemeMode = "app_theme_mode";
 
 const KEY_PAGE_LOAD_SIZE = 'page_size';
@@ -43,6 +45,21 @@ void loginLocal(bool logined) {
 bool isLogin() {
   return Kv
       .decodeBool(KEY_USER_LOGINED, defaultValue: false);
+}
+
+/// 设置跳过登录状态
+void setSkipLogin(bool skip) {
+  Kv.encodeBool(KEY_SKIP_LOGIN, skip);
+}
+
+/// 检查用户是否已选择跳过登录
+bool hasSkippedLogin() {
+  return Kv.decodeBool(KEY_SKIP_LOGIN, defaultValue: false);
+}
+
+/// 检查是否应该显示登录页面（未登录且未跳过登录）
+bool shouldShowLogin() {
+  return !isLogin() && !hasSkippedLogin();
 }
 
 UserInfoResp getUserProfile(){

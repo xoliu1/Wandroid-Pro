@@ -140,7 +140,9 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
   }
 
   /// 发送消息
-  Future<void> sendMessage(String content) async {
+  /// [content] 用户消息内容
+  /// [systemContext] 可选的系统上下文，不会显示在聊天记录中，但会发送给 AI
+  Future<void> sendMessage(String content, {String? systemContext}) async {
     if (_config == null) {
       state = state.copyWith(error: '请先配置 AI 服务');
       return;
@@ -153,8 +155,11 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
 
     _initService();
     AILogger.info('开始发送消息: $content', tag: AIConstants.tagProvider);
+    if (systemContext != null) {
+      AILogger.debug('携带系统上下文: ${systemContext.length} 字符', tag: AIConstants.tagProvider);
+    }
 
-    // 添加用户消息
+    // 添加用户消息（只显示简洁的问题）
     final userMessage = ChatMessage.user(content);
     
     // 延迟 1 微秒，确保 AI 消息 ID 不同
@@ -174,15 +179,21 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
     final history = _buildHistory();
     AILogger.debug('构建历史消息: ${history.length} 条', tag: AIConstants.tagProvider);
 
+    // 如果有系统上下文，将其组合到用户问题中（对 AI 可见，但不显示在 UI 上）
+    String effectiveUserQuestion = content;
+    if (systemContext != null && systemContext.isNotEmpty) {
+      effectiveUserQuestion = '$systemContext\n\n$content';
+    }
+
     // 根据是否为纯对话选择不同的消息构建方式
     final messages = _isPlainChat
         ? AIService.buildPlainMessages(
-            userQuestion: content,
+            userQuestion: effectiveUserQuestion,
             history: history.isEmpty ? null : history,
           )
         : AIService.buildMessagesWithArticle(
             article: _article,
-            userQuestion: content,
+            userQuestion: effectiveUserQuestion,
             history: history.isEmpty ? null : history,
           );
 

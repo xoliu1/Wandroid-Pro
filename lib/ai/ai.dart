@@ -25,6 +25,7 @@ export 'services/ai_service.dart';
 // Providers
 export 'providers/ai_provider_manager.dart';
 export 'providers/ai_chat_provider.dart';
+export 'providers/smart_presets_provider.dart';
 
 // UI
 export 'ui/article_webview_page.dart';

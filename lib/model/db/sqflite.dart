@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import "package:sqflite/sqflite.dart";
 import 'package:path/path.dart';
 
+import '../Todo.dart';
 
 class Db {
   static late final Database db;
@@ -10,11 +11,12 @@ class Db {
   static Future<void> init() async {
     if (initialized) return;
     try {
-      initialized = true;
       db = (await openDB())!;
       await _initDatabase();
+      initialized = true; // 仅在全部成功后才标记为已初始化
       debugPrint('Database initialized successfully');
     } catch (e) {
+      initialized = false; // 确保失败时可以重试
       debugPrint('Failed to initialize database: $e');
       rethrow;
     }
@@ -29,7 +31,7 @@ class Db {
     try {
       final dbPath = await getDatabasesPath();
       final path = join(dbPath, 'local.db');
-      var db = await openDatabase(path, version: 2, onCreate: (db, version) {
+      var db = await openDatabase(path, version: 3, onCreate: (db, version) {
         db.execute('''
         CREATE TABLE tasks(
           id TEXT PRIMARY KEY,
@@ -50,6 +52,40 @@ class Db {
           lastModified TEXT
         )
       ''');
+        db.execute('''
+        CREATE TABLE todos(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL DEFAULT '',
+          content TEXT NOT NULL DEFAULT '',
+          date INTEGER NOT NULL DEFAULT 0,
+          status INTEGER NOT NULL DEFAULT 0,
+          type INTEGER NOT NULL DEFAULT 0,
+          priority INTEGER NOT NULL DEFAULT 0,
+          completeDate INTEGER,
+          completeDateStr TEXT NOT NULL DEFAULT '',
+          dateStr TEXT NOT NULL DEFAULT '',
+          userId INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS todos(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              title TEXT NOT NULL DEFAULT '',
+              content TEXT NOT NULL DEFAULT '',
+              date INTEGER NOT NULL DEFAULT 0,
+              status INTEGER NOT NULL DEFAULT 0,
+              type INTEGER NOT NULL DEFAULT 0,
+              priority INTEGER NOT NULL DEFAULT 0,
+              completeDate INTEGER,
+              completeDateStr TEXT NOT NULL DEFAULT '',
+              dateStr TEXT NOT NULL DEFAULT '',
+              userId INTEGER NOT NULL DEFAULT 0
+            )
+          ''');
+        }
       });
       debugPrint('Database opened at: $path');
       return db;
@@ -85,6 +121,59 @@ class Db {
       },
       version: 2,
     );
+  }
+
+  // ==================== 本地 Todo CRUD ====================
+
+  /// 插入本地 Todo，返回自增 id
+  static Future<Todo> insertTodo(Todo todo) async {
+    if (!initialized) await init();
+    final map = todo.toJson();
+    map.remove('id'); // 让 SQLite 自增
+    final newId = await db.insert('todos', map);
+    return todo.copyWith(id: newId);
+  }
+
+  /// 更新本地 Todo
+  static Future<void> updateTodo(Todo todo) async {
+    if (!initialized) await init();
+    await db.update('todos', todo.toJson(), where: 'id = ?', whereArgs: [todo.id]);
+  }
+
+  /// 删除本地 Todo
+  static Future<void> deleteTodo(int todoId) async {
+    if (!initialized) await init();
+    await db.delete('todos', where: 'id = ?', whereArgs: [todoId]);
+  }
+
+  /// 查询本地 Todo 列表（分页）
+  static Future<List<Todo>> queryTodos({int page = 1, int pageSize = 20}) async {
+    if (!initialized) await init();
+    try {
+      final offset = (page - 1) * pageSize;
+      final rows = await db.query(
+        'todos',
+        orderBy: 'date DESC',
+        limit: pageSize,
+        offset: offset,
+      );
+      return rows.map((row) => Todo.fromJson(row)).toList();
+    } catch (e) {
+      debugPrint('Failed to query local todos: $e');
+      return [];
+    }
+  }
+
+  /// 查询所有本地 Todo（无分页）
+  static Future<List<Todo>> getAllTodos() async {
+    if (!initialized) await init();
+    try {
+      final rows = await db.query('todos', orderBy: 'date DESC');
+      return rows.map((row) => Todo.fromJson(row)).toList();
+    } catch (e) {
+      debugPrint('Failed to get all local todos: $e');
+      return [];
+    }
   }
 
   static Future<void> insertTask(Map<String, dynamic> task) async {

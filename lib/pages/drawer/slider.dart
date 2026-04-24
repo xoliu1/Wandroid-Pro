@@ -189,24 +189,22 @@ class HomeSlider extends ConsumerWidget {
         padding: EdgeInsets.zero,
         children: [
           const SizedBox(height: 8),
-          // 第一组：通知、TODO、NOTE（仅登录时显示）
-          if (isLoggedIn) ...[
-            if (PlatformUtils.isAndroid)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 6),
-                child: MCMSectionLabel('个人中心'.toUpperCase()),
-              ),
-            _buildListSection(
-              context,
-              children: [
-                _buildMessageItem(context, ref),
-              _buildItem(context, 'TODO', Icons.task_alt, CupertinoIcons.checkmark_square, const TodoEntry()),
-                _buildItem(context, 'NOTE', Icons.note, CupertinoIcons.doc_text, NotesPage()),
-                _buildItem(context, '浏览历史', Icons.history, CupertinoIcons.book, const BrowsingHistoryPage()),
-                _buildItem(context, '阅读统计', Icons.bar_chart_rounded, CupertinoIcons.chart_bar_fill, const ReadingStatsPage()),
-              ],
+          // 第一组：TODO、NOTE、浏览历史、阅读统计（无需登录也可使用）
+          if (PlatformUtils.isAndroid)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 6),
+              child: MCMSectionLabel('个人中心'.toUpperCase()),
             ),
-          ],
+          _buildListSection(
+            context,
+            children: [
+              if (isLoggedIn) _buildMessageItem(context, ref),
+              _buildItem(context, 'TODO', Icons.task_alt, CupertinoIcons.checkmark_square, const TodoEntry()),
+              _buildItem(context, 'NOTE', Icons.note, CupertinoIcons.doc_text, NotesPage()),
+              _buildItem(context, '浏览历史', Icons.history, CupertinoIcons.book, const BrowsingHistoryPage()),
+              _buildItem(context, '阅读统计', Icons.bar_chart_rounded, CupertinoIcons.chart_bar_fill, const ReadingStatsPage()),
+            ],
+          ),
 
           /// 第二组：积分、收藏（仅登录时显示）
           if (isLoggedIn) ...[
@@ -609,66 +607,20 @@ Future<void> _handleLogout(BuildContext context, WidgetRef ref) async {
     // 调用退出登录接口
     final cgiUser = CgiUser();
     await cgiUser.logout();
-
-    // 更新全局登录状态
-    ref.read(loginStateProvider.notifier).logout();
-
-    if (context.mounted) {
-      // 关闭加载指示器
-      Navigator.pop(context);
-      
-      // 关闭侧边栏
-      Navigator.pop(context);
-      
-      // 显示成功提示
-      await showPlatformDialog(
-        context: context,
-        title: '退出成功',
-        content: '您已成功退出登录',
-        actions: [
-          PlatformDialogAction(
-            text: '确定',
-            onPressed: () {
-              Navigator.pop(context);
-              // 退出后返回登录页
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-                (route) => false,
-              );
-            },
-          ),
-        ],
-      );
-    }
   } catch (e) {
-    // 即使失败也要更新登录状态
-    ref.read(loginStateProvider.notifier).logout();
-    
-    if (context.mounted) {
-      // 关闭加载指示器
-      Navigator.pop(context);
-      
-      // 显示错误提示
-      await showPlatformDialog(
-        context: context,
-        title: '提示',
-        content: '退出登录时出现问题，但本地数据已清理',
-        actions: [
-          PlatformDialogAction(
-            text: '确定',
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context); // 关闭侧边栏
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-                (route) => false,
-              );
-            },
-          ),
-        ],
-      );
-    }
+    debugPrint('退出登录接口异常: $e（本地数据仍会清理）');
+  }
+
+  // 无论接口成功/失败都更新本地登录状态
+  ref.read(loginStateProvider.notifier).logout();
+
+  if (context.mounted) {
+    // 直接使用 pushAndRemoveUntil 清空所有路由（包括 loading 和侧边栏），
+    // 避免多次 pop 导致 context 失效
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
   }
 }

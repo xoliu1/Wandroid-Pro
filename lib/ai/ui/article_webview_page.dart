@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
@@ -108,6 +109,11 @@ class _ArticleWebViewPageState extends ConsumerState<ArticleWebViewPage> {
               // WebView
               Expanded(
                 child: InAppWebView(
+                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                      Factory<VerticalDragGestureRecognizer>(
+                        () => VerticalDragGestureRecognizer(),
+                      ),
+                    },
                     initialUrlRequest: URLRequest(url: WebUri(widget.url)),
                     initialSettings: InAppWebViewSettings(
                       // 使用移动端 UA

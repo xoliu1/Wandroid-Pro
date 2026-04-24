@@ -10,6 +10,7 @@ import 'package:wanandroid_pro/ai/models/article_content.dart';
 import 'package:wanandroid_pro/ai/models/chat_history.dart';
 import 'package:wanandroid_pro/ai/models/chat_message.dart';
 import 'package:wanandroid_pro/ai/providers/ai_chat_provider.dart';
+import 'package:wanandroid_pro/ai/providers/smart_presets_provider.dart';
 import 'package:wanandroid_pro/ai/services/chat_history_db.dart';
 import 'package:wanandroid_pro/ai/ui/ai_provider_management_page.dart';
 import 'package:wanandroid_pro/model/note.dart';
@@ -308,16 +309,19 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
   /// 新建对话
   void _createNewChat() {
     final chatId = 'plain_chat_${DateTime.now().millisecondsSinceEpoch}';
+    final newHistory = ChatHistory(
+      articleTitle: '新对话',
+      articleAuthor: '',
+      articleUrl: chatId,
+      createdAt: DateTime.now(),
+      messages: [],
+      updatedAt: DateTime.now(),
+    );
     setState(() {
-      _currentHistory = ChatHistory(
-        articleTitle: '新对话',
-        articleAuthor: '',
-        articleUrl: chatId,
-        createdAt: DateTime.now(),
-        messages: [],
-        updatedAt: DateTime.now(),
-      );
+      _currentHistory = newHistory;
+      _histories.insert(0, newHistory); // 加入历史列表，避免切回后丢失
       _isPlainChat = true; // 标记为纯对话模式
+      _chatAreaKey = UniqueKey(); // 触发 AnimatedSwitcher 过渡动画
     });
   }
 
@@ -433,7 +437,8 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
       );
     }
 
-    if (_histories.isEmpty) {
+    // 没有历史记录且没有当前对话 → 空状态
+    if (_histories.isEmpty && _currentHistory == null) {
       return _buildEmptyState(isDark);
     }
 
@@ -791,7 +796,7 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
             onTap: () {
               ref
                   .read(aiChatProvider(article).notifier)
-                  .sendMessage(preset.prompt);
+                  .sendMessage(preset.prompt, systemContext: preset.context);
               _scrollToBottom();
             },
           ),
@@ -800,52 +805,105 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
     );
   }
 
-  /// 预设问题（纯对话模式）—— 带交错入场动画
+  /// 预设问题（纯对话模式）—— 带交错入场动画，根据学习记录智能生成
   Widget _buildPlainChatPresets(bool isDark) {
-    final presets = [
-      PresetQuestion(
-        icon: '💬',
-        title: '开始聊天',
-        prompt: '你好，我想和你聊聊天',
-      ),
-      PresetQuestion(
-        icon: '🤔',
-        title: '帮我解答问题',
-        prompt: '我有一个问题想请教你',
-      ),
-      PresetQuestion(
-        icon: '✍️',
-        title: '帮我写点东西',
-        prompt: '你能帮我写点内容吗？',
-      ),
-      PresetQuestion(
-        icon: '💡',
-        title: '给我一些建议',
-        prompt: '我需要一些建议和想法',
-      ),
-    ];
+    // 从 ref 中获取智能预设问题列表（使用 AsyncValue 处理异步状态）
+    final smartPresetsAsync = ref.watch(smartPresetsProvider);
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: presets.length,
-      itemBuilder: (context, index) {
-        final preset = presets[index];
-        return AnimatedListItem(
-          index: index,
-          duration: const Duration(milliseconds: 350),
-          slideOffset: 25.0,
-          child: _PresetQuestionCard(
-            preset: preset,
-            isDark: isDark,
-            onTap: () {
-              ref
-                  .read(plainChatProvider(_currentHistory!.articleUrl).notifier)
-                  .sendMessage(preset.prompt);
-              _scrollToBottom();
-            },
-          ),
+    return smartPresetsAsync.when(
+      // 数据加载完成
+      data: (categories) {
+        if (categories.isEmpty) {
+          return _buildEmptyCategoryState(isDark);
+        }
+        
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: categories.length,
+          itemBuilder: (context, categoryIndex) {
+            final category = categories[categoryIndex];
+            return AnimatedListItem(
+              index: categoryIndex,
+              duration: const Duration(milliseconds: 350),
+              slideOffset: 25.0,
+              child: _CategorySection(
+                category: category,
+                isDark: isDark,
+                onQuestionTap: (preset) {
+                  ref
+                      .read(plainChatProvider(_currentHistory!.articleUrl).notifier)
+                      .sendMessage(preset.prompt, systemContext: preset.context);
+                  _scrollToBottom();
+                },
+              ),
+            );
+          },
         );
       },
+      // 加载中显示骨架屏
+      loading: () {
+        return _buildLoadingState(isDark);
+      },
+      // 加载失败显示错误
+      error: (error, stackTrace) {
+        debugPrint('🤖 加载智能预设失败: $error');
+        return _buildErrorState(isDark);
+      },
+    );
+  }
+
+  /// 空分类状态
+  Widget _buildEmptyCategoryState(bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            CupertinoIcons.chat_bubble_2,
+            size: 64,
+            color: AppColors.secondaryText(context),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '暂无预设问题',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.secondaryText(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 加载状态
+  Widget _buildLoadingState(bool isDark) {
+    return const Center(
+      child: CupertinoActivityIndicator(),
+    );
+  }
+
+  /// 错误状态
+  Widget _buildErrorState(bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            CupertinoIcons.exclamationmark_circle,
+            size: 64,
+            color: AppColors.secondaryText(context),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '加载失败',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.secondaryText(context),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1124,12 +1182,12 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
               color: Theme.of(context).primaryColor,
               borderRadius: BorderRadius.circular(24),
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(CupertinoIcons.add, size: 20),
+                children: [
+                  Icon(CupertinoIcons.add, size: 20, color: Colors.white),
                   SizedBox(width: 8),
-                  Text('新建对话', style: TextStyle(fontSize: 15)),
+                  Text('新建对话', style: TextStyle(fontSize: 15, color: Colors.white)),
                 ],
               ),
             ),
@@ -1365,7 +1423,134 @@ class _HistorySheetItem extends StatelessWidget {
   }
 }
 
-/// 预设问题卡片
+/// 分类区域组件
+class _CategorySection extends StatelessWidget {
+  final PresetCategory category;
+  final bool isDark;
+  final void Function(PresetQuestion) onQuestionTap;
+
+  const _CategorySection({
+    required this.category,
+    required this.isDark,
+    required this.onQuestionTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 分类标题和描述
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  category.title,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primaryText(context),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  category.description,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.secondaryText(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 问题卡片网格（2 列）
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: category.questions.map((preset) {
+              return _CompactPresetCard(
+                preset: preset,
+                isDark: isDark,
+                onTap: () => onQuestionTap(preset),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 紧凑型预设问题卡片（去掉表情图标，更小尺寸）
+class _CompactPresetCard extends StatelessWidget {
+  final PresetQuestion preset;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _CompactPresetCard({
+    required this.preset,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = (screenWidth - 40) / 2; // 减去左右 padding 和间距
+
+    return SizedBox(
+      width: cardWidth,
+      child: Material(
+        color: MCMColors.card(context),
+        borderRadius: BorderRadius.circular(10),
+        elevation: 0,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: MCMColors.dividerColor(context),
+                width: 0.5,
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    preset.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.primaryText(context),
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  CupertinoIcons.chevron_right,
+                  size: 14,
+                  color: AppColors.secondaryText(context),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 预设问题卡片（旧版，保留用于文章对话模式）
 class _PresetQuestionCard extends StatelessWidget {
   final PresetQuestion preset;
   final bool isDark;
@@ -1399,8 +1584,10 @@ class _PresetQuestionCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Text(preset.icon, style: const TextStyle(fontSize: 24)),
-                const SizedBox(width: 16),
+                if (preset.icon.isNotEmpty) ...[
+                  Text(preset.icon, style: const TextStyle(fontSize: 24)),
+                  const SizedBox(width: 16),
+                ],
                 Expanded(
                   child: Text(
                     preset.title,

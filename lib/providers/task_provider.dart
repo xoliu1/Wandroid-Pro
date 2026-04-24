@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wanandroid_pro/model/Todo.dart';
+import '../local/KV.dart';
+import '../model/db/sqflite.dart';
 import '../remote/CgiTodo.dart';
 import 'page_provider.dart';
 
@@ -14,6 +16,9 @@ typedef TodoNotifier = TodoPaginationNotifier;
 final todoNotifierProvider = todoPaginationProvider;
 
 final allTasksProvider = FutureProvider.autoDispose((ref) async {
+  if (!isLogin()) {
+    return await Db.getAllTodos();
+  }
   final result = await CgiTodo().queryTodo(1);
   return result;
 });

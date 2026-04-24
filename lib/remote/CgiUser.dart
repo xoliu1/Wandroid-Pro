@@ -133,6 +133,9 @@ class CgiUser {
     // 清除 Cookie 过期时间记录（如果有的话）
     Kv.removeValue(KEY_COOKIE_EXPIRED);
     
+    // 清除跳过登录标记（退出登录后重新显示登录页面）
+    setSkipLogin(false);
+    
     if (kDebugMode) {
       print('本地用户数据已清理');
     }
