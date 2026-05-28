@@ -41,6 +41,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Generate Dart sources
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Validate Android signing secrets
         run: |
           test -n "$ANDROID_KEYSTORE_BASE64"
