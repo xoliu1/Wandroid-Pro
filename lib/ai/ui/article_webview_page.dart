@@ -153,7 +153,7 @@ class _ArticleWebViewPageState extends ConsumerState<ArticleWebViewPage> {
                     },
                     onLoadStop: (controller, url) async {
                       // 注入 CSS 隐藏移动端引导元素
-                      await _injectHideMobileElements();
+                      // await _injectHideMobileElements();
 
                       // 页面加载完成，始终自动提取内容
                       // 延迟提取内容（等待动态内容加载）
