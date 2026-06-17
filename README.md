@@ -34,6 +34,152 @@
 
 ---
 
+## 界面预览
+
+### 产品首页展示
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/home-feed.jpg" alt="首页文章流" width="260" />
+      <br />
+      <sub>首页信息流：从技术内容消费开始，串起整套阅读入口。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-chat-home.jpg" alt="AI 对话入口" width="260" />
+      <br />
+      <sub>AI 对话主页：把学习总结、路线规划和问题分析直接做成入口。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/knowledge-system.jpg" alt="知识体系" width="260" />
+      <br />
+      <sub>知识体系：按主题组织 Android 知识点，并保留图谱化扩展空间。</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-daily-report.jpg" alt="AI 日报" width="260" />
+      <br />
+      <sub>AI 日报：把当天阅读、任务和笔记自动收束成一次轻量复盘。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/todo-list.jpg" alt="Todo 列表" width="260" />
+      <br />
+      <sub>待办事项：把学习目标进一步落成任务列表和执行状态。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/notes-list.jpg" alt="笔记列表" width="260" />
+      <br />
+      <sub>笔记系统：沉淀文章摘要、个人理解与 AI 生成内容。</sub>
+    </td>
+  </tr>
+</table>
+
+
+### 内容浏览与知识发现
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/daily-question.jpg" alt="导航与问答" width="260" />
+      <br />
+      <sub>导航与问答：每日一问结合 AI 解答，直接连接阅读和思考。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/wxmp-feed.jpg" alt="公众号文章" width="260" />
+      <br />
+      <sub>公众号阅读：按号浏览技术内容，延续 WanAndroid 阅读链路。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/project-feed.jpg" alt="项目广场" width="260" />
+      <br />
+      <sub>项目广场：浏览开源项目、项目简介与外链信息。</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/browsing-history.jpg" alt="浏览历史" width="260" />
+      <br />
+      <sub>浏览历史：记录阅读轨迹，为复盘与个性化推荐提供素材。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/reading-stats.jpg" alt="阅读统计" width="260" />
+      <br />
+      <sub>阅读统计：用热力图和趋势图观察长期阅读习惯。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/profile-overview.jpg" alt="个人主页" width="260" />
+      <br />
+      <sub>个人面板：把积分、收藏、笔记与阅读数据集中到一个入口。</sub>
+    </td>
+  </tr>
+</table>
+
+
+### AI 助手与学习复盘
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-chat-history.jpg" alt="AI 对话历史" width="260" />
+      <br />
+      <sub>对话历史：按自由对话与文章上下文沉淀会话记录。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-todo-assistant.jpg" alt="AI Todo 助手" width="260" />
+      <br />
+      <sub>AI TODO 助手：把模糊目标拆成可执行任务，并给出理由。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-config.jpg" alt="AI 配置管理" width="260" />
+      <br />
+      <sub>AI 配置：统一管理服务商、模型与自定义接入方式。</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-chat-detail.jpg" alt="AI 对话详情" width="260" />
+      <br />
+      <sub>AI 对话详情：围绕具体问题展开多轮交流与结果生成。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-daily-report.jpg" alt="AI 日报详情" width="260" />
+      <br />
+      <sub>AI 日报详情：把阅读回顾、任务进展、笔记动态和次日建议串起来。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/daily-question.jpg" alt="AI 问答联动" width="260" />
+      <br />
+      <sub>场景联动：在问答内容页直接触发 AI，缩短从阅读到理解的路径。</sub>
+    </td>
+  </tr>
+</table>
+
+
+### 效率工具与补充页面
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/pomodoro-focus.jpg" alt="番茄钟" width="260" />
+      <br />
+      <sub>番茄钟：进入专注模式，把阅读与任务推进到具体时间块。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/message-center.jpg" alt="消息中心" width="260" />
+      <br />
+      <sub>消息中心：查看系统消息、回复与历史互动。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-config.jpg" alt="AI 配置弹层" width="260" />
+      <br />
+      <sub>AI 配置弹层：从预设或手动方式接入不同模型服务商。</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
 ## 功能概览
 
 ### 内容与社区
@@ -99,149 +245,6 @@
 - 在同一应用中切换不同 AI 服务商配置
 - 对比不同模型在总结、解释、任务规划场景下的输出效果
 - 适合把该项目当作个人 AI 能力接入与交互体验的实验田
-
----
-
-## 界面预览
-
-### 产品首页展示
-
-<table>
-  <tr>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/home-feed.jpg" alt="首页文章流" width="260" />
-      <br />
-      <sub>首页信息流：从技术内容消费开始，串起整套阅读入口。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/ai-chat-home.jpg" alt="AI 对话入口" width="260" />
-      <br />
-      <sub>AI 对话主页：把学习总结、路线规划和问题分析直接做成入口。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/knowledge-system.jpg" alt="知识体系" width="260" />
-      <br />
-      <sub>知识体系：按主题组织 Android 知识点，并保留图谱化扩展空间。</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/ai-daily-report.jpg" alt="AI 日报" width="260" />
-      <br />
-      <sub>AI 日报：把当天阅读、任务和笔记自动收束成一次轻量复盘。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/todo-list.jpg" alt="Todo 列表" width="260" />
-      <br />
-      <sub>待办事项：把学习目标进一步落成任务列表和执行状态。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/notes-list.jpg" alt="笔记列表" width="260" />
-      <br />
-      <sub>笔记系统：沉淀文章摘要、个人理解与 AI 生成内容。</sub>
-    </td>
-  </tr>
-</table>
-
-### 内容浏览与知识发现
-
-<table>
-  <tr>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/daily-question.jpg" alt="导航与问答" width="260" />
-      <br />
-      <sub>导航与问答：每日一问结合 AI 解答，直接连接阅读和思考。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/wxmp-feed.jpg" alt="公众号文章" width="260" />
-      <br />
-      <sub>公众号阅读：按号浏览技术内容，延续 WanAndroid 阅读链路。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/project-feed.jpg" alt="项目广场" width="260" />
-      <br />
-      <sub>项目广场：浏览开源项目、项目简介与外链信息。</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/browsing-history.jpg" alt="浏览历史" width="260" />
-      <br />
-      <sub>浏览历史：记录阅读轨迹，为复盘与个性化推荐提供素材。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/reading-stats.jpg" alt="阅读统计" width="260" />
-      <br />
-      <sub>阅读统计：用热力图和趋势图观察长期阅读习惯。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/profile-overview.jpg" alt="个人主页" width="260" />
-      <br />
-      <sub>个人面板：把积分、收藏、笔记与阅读数据集中到一个入口。</sub>
-    </td>
-  </tr>
-</table>
-
-### AI 助手与学习复盘
-
-<table>
-  <tr>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/ai-chat-history.jpg" alt="AI 对话历史" width="260" />
-      <br />
-      <sub>对话历史：按自由对话与文章上下文沉淀会话记录。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/ai-todo-assistant.jpg" alt="AI Todo 助手" width="260" />
-      <br />
-      <sub>AI TODO 助手：把模糊目标拆成可执行任务，并给出理由。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/ai-config.jpg" alt="AI 配置管理" width="260" />
-      <br />
-      <sub>AI 配置：统一管理服务商、模型与自定义接入方式。</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/ai-chat-detail.jpg" alt="AI 对话详情" width="260" />
-      <br />
-      <sub>AI 对话详情：围绕具体问题展开多轮交流与结果生成。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/ai-daily-report.jpg" alt="AI 日报详情" width="260" />
-      <br />
-      <sub>AI 日报详情：把阅读回顾、任务进展、笔记动态和次日建议串起来。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/daily-question.jpg" alt="AI 问答联动" width="260" />
-      <br />
-      <sub>场景联动：在问答内容页直接触发 AI，缩短从阅读到理解的路径。</sub>
-    </td>
-  </tr>
-</table>
-
-### 效率工具与补充页面
-
-<table>
-  <tr>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/pomodoro-focus.jpg" alt="番茄钟" width="260" />
-      <br />
-      <sub>番茄钟：进入专注模式，把阅读与任务推进到具体时间块。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/message-center.jpg" alt="消息中心" width="260" />
-      <br />
-      <sub>消息中心：查看系统消息、回复与历史互动。</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="docs/screenshots/ai-config.jpg" alt="AI 配置弹层" width="260" />
-      <br />
-      <sub>AI 配置弹层：从预设或手动方式接入不同模型服务商。</sub>
-    </td>
-  </tr>
-</table>
 
 ---
 
