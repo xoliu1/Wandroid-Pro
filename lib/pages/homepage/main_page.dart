@@ -7,8 +7,6 @@ import 'package:wanandroid_pro/pages/article/article_list_page.dart';
 import 'package:wanandroid_pro/pages/chapter/chapter_page.dart';
 import 'package:wanandroid_pro/pages/project_list_page.dart';
 import 'package:wanandroid_pro/pages/ai/ai_chat_page.dart';
-import 'package:wanandroid_pro/providers/project_provider.dart';
-import 'package:wanandroid_pro/providers/wx_article_provider.dart';
 import 'package:wanandroid_pro/remote/CgiUser.dart';
 import 'package:wanandroid_pro/utils/responsive.dart';
 import 'dart:io';
@@ -16,7 +14,6 @@ import 'dart:io';
 import '../../ai/providers/user_context_provider.dart';
 import '../../ai/services/browsing_history_db.dart';
 import '../../local/KV.dart';
-import '../../providers/chapter_provider.dart';
 import '../../utils/mcm_widget.dart';
 import '../article/search_page.dart';
 import '../drawer/slider.dart';
@@ -35,32 +32,27 @@ class MainPage extends ConsumerStatefulWidget {
 class _MainPageState extends ConsumerState<MainPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final pages = [
-    const ArticleListPage(),
-    const KnowledgeSystemTab(),
-    const AIChatPage(),
-    const ChapterPage(),
-    const WxArticleTabsPage(),
-    const ProjectListPage(),
+  late final List<WidgetBuilder> _pageBuilders = [
+    (_) => const ArticleListPage(),
+    (_) => const KnowledgeSystemTab(),
+    (_) => const AIChatPage(),
+    (_) => const ChapterPage(),
+    (_) => const WxArticleTabsPage(),
+    (_) => const ProjectListPage(),
   ];
+  final Set<int> _loadedTabIndexes = {0};
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: pages.length, vsync: this);
+    _tabController = TabController(length: _pageBuilders.length, vsync: this);
     _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        _loadedTabIndexes.add(_tabController.index);
+      }
       setState(() {});
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) async{
-
-      getUserInfo();
-      ref.read(chapterProvider);
-      ref.read(projectProvider);
-      ref.read(wxAuthorProvider);
-      ref.read(wxArticleProvider(408));
-      ref.read(naviProvider);
-      ref.read(squareArticleProvider);
-
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 每日检查一次登录态是否过期
       _dailySessionCheck();
 
@@ -131,6 +123,15 @@ class _MainPageState extends ConsumerState<MainPage>
         builder: (context) => const SearchPage(),
       ),
     );
+  }
+
+  List<Widget> _buildPages() {
+    return List.generate(_pageBuilders.length, (index) {
+      if (!_loadedTabIndexes.contains(index)) {
+        return const SizedBox.shrink();
+      }
+      return Builder(builder: _pageBuilders[index]);
+    });
   }
 
   @override
@@ -225,6 +226,7 @@ class _MainPageState extends ConsumerState<MainPage>
           ),
         ],
       ),
+<<<<<<< HEAD
       body: Row(
         children: [
           // 桌面端：侧边栏常驻
@@ -246,7 +248,7 @@ class _MainPageState extends ConsumerState<MainPage>
               children: [
                 IndexedStack(
                   index: _tabController.index,
-                  children: pages,
+                  children: _buildPages(),
                 ),
                 // 底部导航栏
                 Positioned(

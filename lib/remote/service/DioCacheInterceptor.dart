@@ -14,7 +14,7 @@ final cacheOption = CacheOptions(
   // 覆盖任何 HTTP 指令，在此持续时间后删除缓存条目
   // 仅在源服务器无缓存配置或需要自定义行为时有用
   // 默认为 `null`
-  maxStale: const Duration(days: 7),
+  maxStale: const Duration(days: 30),
   // 默认值。允许 3 个缓存集合并便于清理
   priority: CachePriority.high,
   // 默认值。使用你自己的算法对响应体和头部进行加密

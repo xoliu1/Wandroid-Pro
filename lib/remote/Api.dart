@@ -3,7 +3,7 @@ import '../model/article.dart';
 import '../model/project.dart';
 
 /// 基础域名
-const BASE_URL = 'https://www.wanandroid.com';
+const BASE_URL = 'https://wanandroid.com';
 
 /// 注册接口
 const URL_REGISTER = '/user/register';
