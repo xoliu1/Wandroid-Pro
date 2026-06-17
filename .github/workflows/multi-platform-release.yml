@@ -1,0 +1,222 @@
+name: Multi Platform Release
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    env:
+      ANDROID_KEYSTORE_PATH: app/upload-keystore.jks
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.7"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Validate Android signing secrets
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
+
+      - name: Decode Android keystore
+        run: echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+
+      - name: Build release APK
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+            flutter build apk --release --build-name "$VERSION_NAME" --build-number "$GITHUB_RUN_NUMBER"
+          else
+            flutter build apk --release --build-number "$GITHUB_RUN_NUMBER"
+          fi
+
+      - name: Prepare release asset
+        run: |
+          mkdir -p release
+          cp build/app/outputs/flutter-apk/app-release.apk "release/wanandroid-pro-${GITHUB_REF_NAME}-android.apk"
+
+      - name: Upload artifact
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanandroid-pro-android-${{ github.sha }}
+          path: release/*.apk
+
+      - name: Publish GitHub Release asset
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: softprops/action-gh-release@v3
+        with:
+          files: release/*.apk
+          generate_release_notes: true
+
+  build-windows:
+    name: Build Windows Package
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.7"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows release
+        shell: powershell
+        run: |
+          if ("${env:GITHUB_REF}" -like "refs/tags/*") {
+            $versionName = "${env:GITHUB_REF_NAME}".Substring(1)
+            flutter build windows --release --build-name $versionName --build-number $env:GITHUB_RUN_NUMBER
+          } else {
+            flutter build windows --release --build-number $env:GITHUB_RUN_NUMBER
+          }
+
+      - name: Prepare release asset
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "release/wanandroid-pro-${env:GITHUB_REF_NAME}-windows.zip"
+
+      - name: Upload artifact
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanandroid-pro-windows-${{ github.sha }}
+          path: release/*.zip
+
+      - name: Publish GitHub Release asset
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: softprops/action-gh-release@v3
+        with:
+          files: release/*.zip
+          append_body: false
+
+  build-macos:
+    name: Build macOS App
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.7"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build macOS release
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+            flutter build macos --release --build-name "$VERSION_NAME" --build-number "$GITHUB_RUN_NUMBER"
+          else
+            flutter build macos --release --build-number "$GITHUB_RUN_NUMBER"
+          fi
+
+      - name: Prepare release asset
+        run: |
+          mkdir -p release
+          ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/flutter_wanandroid.app "release/wanandroid-pro-${GITHUB_REF_NAME}-macos.zip"
+
+      - name: Upload artifact
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanandroid-pro-macos-${{ github.sha }}
+          path: release/*.zip
+
+      - name: Publish GitHub Release asset
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: softprops/action-gh-release@v3
+        with:
+          files: release/*.zip
+          append_body: false
+
+  build-ios:
+    name: Build iOS App Without Signing
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.7"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS release without codesign
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+            flutter build ios --release --no-codesign --build-name "$VERSION_NAME" --build-number "$GITHUB_RUN_NUMBER"
+          else
+            flutter build ios --release --no-codesign --build-number "$GITHUB_RUN_NUMBER"
+          fi
+
+      - name: Prepare release asset
+        run: |
+          mkdir -p release
+          ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app "release/wanandroid-pro-${GITHUB_REF_NAME}-ios-unsigned.zip"
+
+      - name: Upload artifact
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wanandroid-pro-ios-unsigned-${{ github.sha }}
+          path: release/*.zip
+
+      - name: Publish GitHub Release asset
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: softprops/action-gh-release@v3
+        with:
+          files: release/*.zip
+          append_body: false
