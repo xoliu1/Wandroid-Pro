@@ -10,6 +10,7 @@ import 'package:wanandroid_pro/utils/mcm_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../gen/assets.gen.dart';
+import '../../local/KV.dart';
 import '../../providers/profile_provider.dart';
 import '../../remote/CgiUser.dart';
 import '../homepage/main_page.dart';
@@ -375,6 +376,33 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 8),
+                // 跳过登录入口
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 600),
+                  child: Center(
+                    child: TextButton(
+                      onPressed: () {
+                        // 保存跳过登录的选择
+                        setSkipLogin(true);
+                        Navigator.pushReplacement(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (_) => const MainPage(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        '跳过登录，随便看看',
+                        style: TextStyle(
+                          color: MCMColors.secondaryText(context),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 40),
                 // 底部 MCM 装饰
                 Center(
@@ -398,6 +426,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       .onSuccess((user) async {
         // 登录成功 - 更新全局登录状态
         ref.read(loginStateProvider.notifier).login();
+        
+        // 清除跳过登录标记（登录成功后不再需要这个标记）
+        setSkipLogin(false);
         
         if (!completer.isCompleted) {
           completer.complete(true);

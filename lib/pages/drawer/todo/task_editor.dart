@@ -8,6 +8,8 @@ import 'package:wanandroid_pro/providers/task_provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:wanandroid_pro/utils/app_colors.dart';
 
+import '../../../local/KV.dart';
+import '../../../model/db/sqflite.dart';
 import '../../../remote/CgiTodo.dart';
 
 
@@ -352,6 +354,32 @@ class _TodoEditorState extends ConsumerState<TodoEditor> {
   }
 
   void saveTodo(Todo todo) async {
+    if (!isLogin()) {
+      // 未登录 → 保存到本地数据库
+      try {
+        final saved = await Db.insertTodo(todo);
+        ref.read(todoNotifierProvider.notifier).addTodo(saved);
+        toastification.show(
+          context: context,
+          title: const Text('保存成功！'),
+          primaryColor: Colors.green,
+          showProgressBar: false,
+          autoCloseDuration: const Duration(seconds: 2),
+        );
+        Navigator.pop(context, saved);
+      } catch (e) {
+        toastification.show(
+          context: context,
+          title: Text('保存失败: $e'),
+          primaryColor: Colors.red,
+          showProgressBar: false,
+          autoCloseDuration: const Duration(seconds: 2),
+        );
+      }
+      return;
+    }
+
+    // 已登录 → 调用远程 API
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -396,6 +424,32 @@ class _TodoEditorState extends ConsumerState<TodoEditor> {
   }
 
   void updateTodo(Todo todo) async {
+    if (!isLogin()) {
+      // 未登录 → 更新本地数据库
+      try {
+        await Db.updateTodo(todo);
+        ref.read(todoNotifierProvider.notifier).updateTodo(todo.id, todo);
+        toastification.show(
+          context: context,
+          title: const Text('保存成功！'),
+          primaryColor: Colors.green,
+          showProgressBar: false,
+          autoCloseDuration: const Duration(seconds: 2),
+        );
+        Navigator.pop(context, todo);
+      } catch (e) {
+        toastification.show(
+          context: context,
+          title: Text('保存失败: $e'),
+          primaryColor: Colors.red,
+          showProgressBar: false,
+          autoCloseDuration: const Duration(seconds: 2),
+        );
+      }
+      return;
+    }
+
+    // 已登录 → 调用远程 API
     showDialog(
       context: context,
       barrierDismissible: false,

@@ -102,14 +102,12 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
                       label: '名称',
                       controller: _nameController,
                       hint: '例如：我的 DeepSeek',
-                      icon: Icons.label_outline_rounded,
                     ),
                     _buildDivider(),
                     _buildField(
                       label: '描述',
                       controller: _descriptionController,
                       hint: '可选备注',
-                      icon: Icons.notes_rounded,
                     ),
                   ]),
 
@@ -123,7 +121,6 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
                       label: 'API URL',
                       controller: _apiUrlController,
                       hint: 'https://api.xxx.com/v1',
-                      icon: Icons.link_rounded,
                       maxLines: 2,
                     ),
                     _buildDivider(),
@@ -131,7 +128,6 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
                       label: 'Model ID',
                       controller: _modelIdController,
                       hint: '例如：deepseek-chat',
-                      icon: Icons.memory_rounded,
                     ),
                     _buildDivider(),
                     _buildPasswordField(),
@@ -338,121 +334,90 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
   Widget _buildDivider() {
     return Container(
       height: 1,
-      margin: const EdgeInsets.only(left: 56),
+      margin: const EdgeInsets.only(left: 16, right: 16),
       color: _MCM.divider,
     );
   }
 
-  // ── 普通输入字段 ──────────────────────────────────────────────────────────
+  // ── 普通输入字段（无图标，避免遮挡输入文字）──────────────────────────────
   Widget _buildField({
     required String label,
     required TextEditingController controller,
     required String hint,
-    required IconData icon,
     int maxLines = 1,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: _MCM.cream,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 16, color: _MCM.walnut),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        style: const TextStyle(
+          fontSize: 15,
+          color: _MCM.darkBrown,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(
+            fontSize: 13,
+            color: _MCM.walnut,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              maxLines: maxLines,
-              style: const TextStyle(
-                fontSize: 15,
-                color: _MCM.darkBrown,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                labelText: label,
-                labelStyle: const TextStyle(
-                  fontSize: 12,
-                  color: _MCM.walnut,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-                hintText: hint,
-                hintStyle: TextStyle(
-                  fontSize: 14,
-                  color: _MCM.walnut.withValues(alpha: 0.4),
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                floatingLabelBehavior: FloatingLabelBehavior.always,
-              ),
-            ),
+          hintText: hint,
+          hintStyle: TextStyle(
+            fontSize: 14,
+            color: _MCM.walnut.withValues(alpha: 0.4),
           ),
-        ],
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.only(top: 18, bottom: 10),
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+        ),
       ),
     );
   }
 
-  // ── 密码输入字段 ──────────────────────────────────────────────────────────
+  // ── 密码输入字段（无左侧图标）──────────────────────────────────────────
   Widget _buildPasswordField() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: _MCM.cream,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.vpn_key_rounded, size: 16, color: _MCM.walnut),
+      child: TextField(
+        controller: _apiKeyController,
+        obscureText: _obscureApiKey,
+        style: const TextStyle(
+          fontSize: 15,
+          color: _MCM.darkBrown,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          labelText: 'API Key',
+          labelStyle: const TextStyle(
+            fontSize: 13,
+            color: _MCM.walnut,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: _apiKeyController,
-              obscureText: _obscureApiKey,
-              style: const TextStyle(
-                fontSize: 15,
-                color: _MCM.darkBrown,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                labelText: 'API Key',
-                labelStyle: const TextStyle(
-                  fontSize: 12,
-                  color: _MCM.walnut,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-                hintText: '请输入 API Key',
-                hintStyle: TextStyle(
-                  fontSize: 14,
-                  color: _MCM.walnut.withValues(alpha: 0.4),
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                floatingLabelBehavior: FloatingLabelBehavior.always,
-                suffixIcon: GestureDetector(
-                  onTap: () => setState(() => _obscureApiKey = !_obscureApiKey),
-                  child: Icon(
-                    _obscureApiKey ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                    size: 18,
-                    color: _MCM.walnut,
-                  ),
-                ),
-              ),
+          hintText: '请输入 API Key',
+          hintStyle: TextStyle(
+            fontSize: 14,
+            color: _MCM.walnut.withValues(alpha: 0.4),
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.only(top: 18, bottom: 10),
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+          suffixIcon: GestureDetector(
+            onTap: () => setState(() => _obscureApiKey = !_obscureApiKey),
+            child: Icon(
+              _obscureApiKey ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+              size: 18,
+              color: _MCM.walnut,
             ),
           ),
-        ],
+          suffixIconConstraints: const BoxConstraints(
+            minWidth: 40,
+            minHeight: 40,
+          ),
+        ),
       ),
     );
   }

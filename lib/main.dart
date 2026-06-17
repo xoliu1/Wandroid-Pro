@@ -71,7 +71,7 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final logined = isLogin();
+    final showLogin = shouldShowLogin(); // 未登录且未跳过登录时才显示登录页
     final themeMode = ref.watch(themeModeProvider);
     final accentColor = ref.watch(accentColorProvider);
 
@@ -99,7 +99,7 @@ class MyApp extends ConsumerWidget {
       themeMode: themeMode,
       theme: buildLightTheme(accentColor, pageTransitionsTheme),
       darkTheme: buildDarkTheme(accentColor, pageTransitionsTheme),
-      home: logined ? const MainPage() : const LoginPage(),
+      home: showLogin ? const LoginPage() : const MainPage(),
     );
   }
 }

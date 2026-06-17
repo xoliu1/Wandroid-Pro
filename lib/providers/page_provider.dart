@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wanandroid_pro/model/Todo.dart';
 
 import '../ai/providers/user_context_provider.dart';
+import '../local/KV.dart';
+import '../model/db/sqflite.dart';
 import '../remote/CgiTodo.dart';
 
 // 分页状态类
@@ -48,12 +50,22 @@ class TodoPaginationNotifier extends StateNotifier<PaginationState<Todo>> {
   /// 数据变更回调（用于通知用户画像刷新）
   final VoidCallback? onDataChanged;
 
+  /// 是否使用本地数据源
+  bool get _useLocal => !isLogin();
+
   // 加载第一页
   Future<void> loadFirstPage() async {
-    print('开始加载第一页数据...');
+    print('开始加载第一页数据... (本地模式: $_useLocal)');
     state = state.copyWith(isLoading: true, error: null);
 
-      final response = await _cgi.queryTodo(1);
+    try {
+      List<Todo> response;
+      if (_useLocal) {
+        response = await Db.queryTodos(page: 1, pageSize: _pageSize);
+      } else {
+        response = await _cgi.queryTodo(1);
+      }
+
       if (response.isEmpty) {
         print('第一页返回空数据');
         state = state.copyWith(
@@ -71,10 +83,17 @@ class TodoPaginationNotifier extends StateNotifier<PaginationState<Todo>> {
         hasMore: response.length >= _pageSize,
       );
       print('第一页数据加载完成，当前页码:1，是否有更多数据:${state.hasMore}');
+    } catch (e, stackTrace) {
+      print('加载第一页数据失败: $e');
+      print('错误堆栈: $stackTrace');
       state = state.copyWith(
+        items: [],
+        currentPage: 1,
         isLoading: false,
+        hasMore: false,
+        error: e.toString(),
       );
-
+    }
   }
 
   // 加载下一页
@@ -90,7 +109,12 @@ class TodoPaginationNotifier extends StateNotifier<PaginationState<Todo>> {
     try {
       print('开始加载第$nextPage页数据...');
 
-      final newTodos = await _cgi.queryTodo(nextPage);
+      List<Todo> newTodos;
+      if (_useLocal) {
+        newTodos = await Db.queryTodos(page: nextPage, pageSize: _pageSize);
+      } else {
+        newTodos = await _cgi.queryTodo(nextPage);
+      }
       print('第$nextPage页返回: ${newTodos.length}条记录');
 
       final allTodos = [...state.items, ...newTodos];
@@ -138,6 +162,10 @@ class TodoPaginationNotifier extends StateNotifier<PaginationState<Todo>> {
     }).toList();
 
     state = state.copyWith(items: updatedItems);
+    // 本地模式下同步持久化
+    if (_useLocal) {
+      Db.updateTodo(updatedTodo);
+    }
     onDataChanged?.call();
   }
 
@@ -145,6 +173,10 @@ class TodoPaginationNotifier extends StateNotifier<PaginationState<Todo>> {
   void deleteTodo(int id) {
     final updatedItems = state.items.where((todo) => todo.id != id).toList();
     state = state.copyWith(items: updatedItems);
+    // 本地模式下同步持久化
+    if (_useLocal) {
+      Db.deleteTodo(id);
+    }
     onDataChanged?.call();
   }
 }

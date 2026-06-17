@@ -120,11 +120,13 @@ class PresetQuestion {
   final String title;
   final String prompt;
   final String icon;
+  final String? context; // 可选的上下文数据，不会显示在用户消息中
 
   const PresetQuestion({
     required this.title,
     required this.prompt,
     required this.icon,
+    this.context,
   });
 
   static const List<PresetQuestion> defaults = [
