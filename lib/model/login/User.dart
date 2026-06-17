@@ -10,7 +10,7 @@ class User {
   int type;
   String username;
 
-  User(this.chapterTops, this.collectIds, this.email, this.icon,
+  User(this.chapterTops, this.collectIds, thi1s.email, this.icon,
       this.id, this.password, this.token, this.type, this.username);
 
   factory User.fromJson(Map<String, dynamic> json) => User(
