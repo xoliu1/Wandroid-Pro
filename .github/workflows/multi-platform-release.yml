@@ -83,7 +83,7 @@ jobs:
 
   build-windows:
     name: Build Windows Package
-    runs-on: windows-latest
+    runs-on: windows-2019
 
     steps:
       - name: Checkout
@@ -176,7 +176,7 @@ jobs:
           append_body: false
 
   build-ios:
-    name: Build iOS App Without Signing
+    name: Build iOS Simulator App
     runs-on: macos-latest
 
     steps:
@@ -193,25 +193,25 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build iOS release without codesign
+      - name: Build iOS simulator release
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             VERSION_NAME="${GITHUB_REF_NAME#v}"
-            flutter build ios --release --no-codesign --build-name "$VERSION_NAME" --build-number "$GITHUB_RUN_NUMBER"
+            flutter build ios --simulator --debug --build-name "$VERSION_NAME" --build-number "$GITHUB_RUN_NUMBER"
           else
-            flutter build ios --release --no-codesign --build-number "$GITHUB_RUN_NUMBER"
+            flutter build ios --simulator --debug --build-number "$GITHUB_RUN_NUMBER"
           fi
 
       - name: Prepare release asset
         run: |
           mkdir -p release
-          ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app "release/wanandroid-pro-${GITHUB_REF_NAME}-ios-unsigned.zip"
+          ditto -c -k --sequesterRsrc --keepParent build/ios/iphonesimulator/Runner.app "release/wanandroid-pro-${GITHUB_REF_NAME}-ios-simulator.zip"
 
       - name: Upload artifact
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/upload-artifact@v4
         with:
-          name: wanandroid-pro-ios-unsigned-${{ github.sha }}
+          name: wanandroid-pro-ios-simulator-${{ github.sha }}
           path: release/*.zip
 
       - name: Publish GitHub Release asset

@@ -226,7 +226,6 @@ class _MainPageState extends ConsumerState<MainPage>
           ),
         ],
       ),
-<<<<<<< HEAD
       body: Row(
         children: [
           // 桌面端：侧边栏常驻
