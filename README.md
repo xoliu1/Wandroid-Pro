@@ -1,87 +1,282 @@
 <div align="center">
-  <h1>Flutter WanAndroid</h1>
-  <p>一个功能丰富、UI 精美的 WanAndroid 客户端</p>
+  <h1>Wandroid Pro</h1>
+  <p>一个把 WanAndroid 阅读、知识管理、待办笔记与 AI 助手整合到一起的 Flutter 客户端。</p>
   <p>
-    <a href="#特性">特性</a> •
-    <a href="#截图">截图</a> •
+    <a href="#项目简介">项目简介</a> •
+    <a href="#功能概览">功能概览</a> •
+    <a href="#使用场景">使用场景</a> •
+    <a href="#界面预览">界面预览</a> •
     <a href="#技术栈">技术栈</a> •
     <a href="#快速开始">快速开始</a> •
-    <a href="#项目架构">项目架构</a> •
-    <a href="#开发指南">开发指南</a>
+    <a href="#项目结构">项目结构</a> •
+    <a href="#架构摘要">架构摘要</a>
   </p>
 </div>
 
 ---
 
-## 特性
+## 项目简介
 
-### 📱 核心功能
+`Wandroid Pro` 不是单纯的 WanAndroid 阅读器，而是围绕「技术内容消费 + 个人知识沉淀 + AI 辅助学习」扩展出来的一体化应用。
 
-- **首页浏览**: Banner 轮播、置顶文章、推荐文章流
-- **知识体系**: 分类导航、知识树结构、体系化学习
-- **项目分类**: 开源项目展示、项目详情查看
-- **公众号文章**: 订阅公众号、查看历史文章
-- **用户系统**: 登录/注册、个人信息、积分排行
-- **收藏管理**: 收藏文章、收藏列表、取消收藏
-- **文章搜索**: 关键词搜索、搜索历史
-- **广场功能**: 用户分享、广场文章流
+应用当前以 `lib/main.dart` 为入口，主导航位于 `lib/pages/homepage/main_page.dart`，提供 6 个核心 Tab：
 
-### 🤖 AI 智能功能
+- 首页文章流
+- 知识体系
+- AI 对话
+- 导航与问答
+- 公众号文章
+- 项目广场
 
-- **AI 对话助手**: 基于文章内容的智能问答
-- **流式输出**: SSE 流式响应，打字机效果
-- **预设问题**: 总结要点、深入解析、优缺点分析、实践建议
-- **多厂商支持**: OpenAI、Claude、Gemini、智谱 AI、通义千问、DeepSeek 等
-- **对话历史**: 本地存储，持久化管理
-- **智能上下文**: 自动提取文章内容，保持对话连贯性
+在此基础上，侧边栏继续扩展出 TODO、番茄钟、笔记、阅读统计、浏览历史、AI 日报、AI 周报、AI 配置、聊天记录等能力，让阅读行为可以进一步转化为计划、记录与总结。
 
-### 🎨 UI/UX 特性
-
-- **iOS 风格**: 全 Cupertino 风格组件
-- **深色模式**: 完整的深色模式适配
-- **流畅动画**: 页面转场、下拉刷新、加载动画
-- **WebView 集成**: 文章详情页、进度条、前进后退
-- **响应式布局**: 适配不同屏幕尺寸
-- **San Francisco 字体**: 原生 iOS 字体体验
+仓库地址：[xoliu1/Wandroid-Pro](https://github.com/xoliu1/Wandroid-Pro)
 
 ---
 
-## 截图
+## 功能概览
 
-> TODO: 添加应用截图
+### 内容与社区
+
+- 首页聚合 Banner、置顶文章与推荐文章流
+- 知识体系支持分类导航、知识树与图谱式浏览
+- 公众号文章支持按号查看历史内容
+- 项目页展示开源项目分类与列表
+- 导航与每日问答帮助用户按专题发现内容
+- 搜索、收藏、积分、消息、用户中心等 WanAndroid 常用能力完整保留
+
+### 个人效率与知识管理
+
+- 抽屉区提供 TODO、任务编辑、任务优先级与完成状态管理
+- 集成番茄钟页面，支持专注节奏管理
+- 内置本地笔记系统，可记录阅读摘要与想法
+- 阅读统计页和浏览历史页沉淀个人阅读轨迹
+- 登录态、主题模式、设置页等基础体验已经独立完善
+
+### AI 智能能力
+
+- AI 对话页支持通用聊天与文章上下文问答
+- 支持 OpenAI、Claude、Gemini、智谱 AI、通义千问、DeepSeek 等多厂商配置
+- AI 会基于当前文章内容构建上下文，适合做总结、问答、优缺点分析与实践建议
+- 支持聊天记录持久化，保留上下文连续性
+- 支持从阅读、TODO、笔记、收藏中采集用户画像，形成长期上下文
+- 支持 AI 日报：汇总当天浏览、任务、笔记与收藏变化
+- 支持 AI 周报：生成结构化周总结、成长评价与下周目标
+- 支持 AI TODO 助手：拆解目标或给出个性化任务建议
+- 支持笔记场景下的 AI 续写与 AI 润色
+- 支持针对不同内容平台的文章正文抽取策略，便于 AI 获取干净语料
+
+---
+
+## 使用场景
+
+### 1. 技术阅读增强
+
+- 阅读 WanAndroid、公众号或外链文章时，直接发起 AI 问答
+- 快速提炼文章要点、核心观点、适用场景与风险点
+- 对一篇技术文章继续追问实现细节，而不是只停留在浏览阶段
+
+### 2. 知识沉淀
+
+- 看完文章后把摘要写进笔记，再用 AI 做续写或润色
+- 把浏览记录、收藏行为和笔记内容累积成用户画像
+- 后续 AI 回答可以更贴近用户当前关注方向
+
+### 3. 学习规划与任务推进
+
+- 将一个模糊目标交给 AI TODO 助手，拆成可以执行的子任务
+- 结合待办列表和番茄钟，将“想学”变成“今天做什么”
+- 用 AI 每日建议连接阅读内容与行动计划
+
+### 4. 周期性复盘
+
+- AI 日报适合每天快速回顾：今天读了什么、做了什么、还缺什么
+- AI 周报适合每周复盘：本周输入输出、成长评分、下周目标
+- 阅读统计和浏览历史为复盘提供可追溯数据基础
+
+### 5. 多模型试验场
+
+- 在同一应用中切换不同 AI 服务商配置
+- 对比不同模型在总结、解释、任务规划场景下的输出效果
+- 适合把该项目当作个人 AI 能力接入与交互体验的实验田
+
+---
+
+## 界面预览
+
+### 产品首页展示
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/home-feed.jpg" alt="首页文章流" width="260" />
+      <br />
+      <sub>首页信息流：从技术内容消费开始，串起整套阅读入口。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-chat-home.jpg" alt="AI 对话入口" width="260" />
+      <br />
+      <sub>AI 对话主页：把学习总结、路线规划和问题分析直接做成入口。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/knowledge-system.jpg" alt="知识体系" width="260" />
+      <br />
+      <sub>知识体系：按主题组织 Android 知识点，并保留图谱化扩展空间。</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-daily-report.jpg" alt="AI 日报" width="260" />
+      <br />
+      <sub>AI 日报：把当天阅读、任务和笔记自动收束成一次轻量复盘。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/todo-list.jpg" alt="Todo 列表" width="260" />
+      <br />
+      <sub>待办事项：把学习目标进一步落成任务列表和执行状态。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/notes-list.jpg" alt="笔记列表" width="260" />
+      <br />
+      <sub>笔记系统：沉淀文章摘要、个人理解与 AI 生成内容。</sub>
+    </td>
+  </tr>
+</table>
+
+### 内容浏览与知识发现
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/daily-question.jpg" alt="导航与问答" width="260" />
+      <br />
+      <sub>导航与问答：每日一问结合 AI 解答，直接连接阅读和思考。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/wxmp-feed.jpg" alt="公众号文章" width="260" />
+      <br />
+      <sub>公众号阅读：按号浏览技术内容，延续 WanAndroid 阅读链路。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/project-feed.jpg" alt="项目广场" width="260" />
+      <br />
+      <sub>项目广场：浏览开源项目、项目简介与外链信息。</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/browsing-history.jpg" alt="浏览历史" width="260" />
+      <br />
+      <sub>浏览历史：记录阅读轨迹，为复盘与个性化推荐提供素材。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/reading-stats.jpg" alt="阅读统计" width="260" />
+      <br />
+      <sub>阅读统计：用热力图和趋势图观察长期阅读习惯。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/profile-overview.jpg" alt="个人主页" width="260" />
+      <br />
+      <sub>个人面板：把积分、收藏、笔记与阅读数据集中到一个入口。</sub>
+    </td>
+  </tr>
+</table>
+
+### AI 助手与学习复盘
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-chat-history.jpg" alt="AI 对话历史" width="260" />
+      <br />
+      <sub>对话历史：按自由对话与文章上下文沉淀会话记录。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-todo-assistant.jpg" alt="AI Todo 助手" width="260" />
+      <br />
+      <sub>AI TODO 助手：把模糊目标拆成可执行任务，并给出理由。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-config.jpg" alt="AI 配置管理" width="260" />
+      <br />
+      <sub>AI 配置：统一管理服务商、模型与自定义接入方式。</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-chat-detail.jpg" alt="AI 对话详情" width="260" />
+      <br />
+      <sub>AI 对话详情：围绕具体问题展开多轮交流与结果生成。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-daily-report.jpg" alt="AI 日报详情" width="260" />
+      <br />
+      <sub>AI 日报详情：把阅读回顾、任务进展、笔记动态和次日建议串起来。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/daily-question.jpg" alt="AI 问答联动" width="260" />
+      <br />
+      <sub>场景联动：在问答内容页直接触发 AI，缩短从阅读到理解的路径。</sub>
+    </td>
+  </tr>
+</table>
+
+### 效率工具与补充页面
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/pomodoro-focus.jpg" alt="番茄钟" width="260" />
+      <br />
+      <sub>番茄钟：进入专注模式，把阅读与任务推进到具体时间块。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/message-center.jpg" alt="消息中心" width="260" />
+      <br />
+      <sub>消息中心：查看系统消息、回复与历史互动。</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/ai-config.jpg" alt="AI 配置弹层" width="260" />
+      <br />
+      <sub>AI 配置弹层：从预设或手动方式接入不同模型服务商。</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
 ## 技术栈
 
-### 核心框架
+### 客户端与状态管理
 
-- **Flutter**: 跨平台 UI 框架
-- **flutter_riverpod**: 状态管理
-- **Dio**: HTTP 网络请求
-- **flutter_inappwebview**: WebView 集成
+- Flutter
+- Riverpod / Flutter Riverpod
+- Cupertino + Material 混合界面
 
-### 数据存储
+### 网络与存储
 
-- **MMKV**: 高性能键值存储（主）
-- **SharedPreferences**: 轻量级存储
-- **Sqflite**: 本地数据库（聊天记录）
-- **cookie_jar**: Cookie 持久化
+- Dio
+- dio_cookie_manager
+- dio_cache_interceptor
+- MMKV
+- SharedPreferences
+- Sqflite
 
-### UI 组件
+### 内容渲染与交互
 
-- **carousel_slider**: Banner 轮播
-- **pull_to_refresh**: 下拉刷新
-- **cached_network_image**: 图片缓存
-- **flutter_html**: HTML 渲染
-- **flutter_markdown**: Markdown 渲染
+- flutter_inappwebview
+- flutter_html
+- flutter_markdown
+- cached_network_image
+- carousel_slider
+- pull_to_refresh_flutter3
 
-### 工具库
+### AI 与内容处理
 
-- **dio_cache_interceptor**: 网络缓存
-- **url_launcher**: 打开外部链接
-- **html_unescape**: HTML 转义
-- **path_provider**: 文件路径
+- 多厂商 LLM 接入
+- HTML 解析与正文抽取策略
+- 流式响应
+- 本地聊天记录、浏览历史与用户上下文采集
 
 ---
 
@@ -89,427 +284,183 @@
 
 ### 环境要求
 
-- **Flutter**: >= 3.4.3
-- **Dart**: >= 3.4.3
-- **Android SDK**: >= 21
-- **iOS**: >= 12.0
+- Flutter `>= 3.4.3`
+- Dart `>= 3.4.3`
+- Android SDK `>= 21`
+- iOS `>= 12.0`
 
-### 安装步骤
-
-1. **克隆项目**
+### 安装运行
 
 ```bash
-git clone https://github.com/yourusername/flutter_wanandroid.git
-cd flutter_wanandroid
-```
-
-2. **安装依赖**
-
-```bash
+git clone https://github.com/xoliu1/Wandroid-Pro.git
+cd Wandroid-Pro
 flutter pub get
+flutter run
 ```
 
-3. **运行代码生成**
+如果你启用了代码生成相关能力，可按需执行：
 
 ```bash
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
-4. **运行应用**
+### AI 配置
 
-```bash
-# Android
-flutter run
-
-# iOS
-flutter run
-
-# 指定设备
-flutter run -d <device_id>
-```
+1. 打开侧边栏
+2. 进入 `AI 配置`
+3. 选择预设服务商或创建自定义服务商
+4. 填入 `API Key`、模型名、接口地址等信息
+5. 保存后即可在 AI 对话、日报、周报、TODO 助手等场景使用
 
 ---
 
-## 项目架构
+## 项目结构
 
-### 目录结构
+当前项目核心结构可概括为：
 
-```
+```text
 lib/
-├── ai/                      # AI 功能模块
-│   ├── core/               # 核心组件（常量、日志、结果封装）
-│   ├── models/             # 数据模型
-│   ├── providers/          # 状态管理
-│   ├── repositories/       # 数据仓库层
-│   ├── services/           # 业务服务
-│   └── ui/                 # UI 组件
-├── local/                   # 本地存储
-│   ├── KV.dart             # MMKV 封装
-│   └── UserProfileDB.dart  # 用户信息数据库
-├── model/                   # 数据模型
-├── pages/                   # 页面
-│   ├── article/            # 文章相关
-│   ├── chapter/            # 章节分类
-│   ├── coin/               # 积分
-│   ├── collect/            # 收藏
-│   ├── drawer/             # 侧边栏
-│   ├── homepage/           # 首页
-│   ├── knowledgeTree/      # 知识体系
-│   ├── login/              # 登录
-│   ├── settings/           # 设置
-│   ├── webview/            # WebView
-│   ├── widget/             # 通用组件
-│   └── wxmp/               # 公众号
-├── providers/               # 全局 Provider
-├── remote/                  # 网络层
-│   ├── service/            # 网络服务
-│   ├── Api.dart            # API 定义
-│   ├── CgiArticle.dart     # 文章业务层
-│   ├── CgiCollect.dart     # 收藏业务层
-│   └── ...                 # 其他业务层
-└── main.dart               # 应用入口
+├── ai/
+│   ├── core/                    # 常量、日志、结果封装
+│   ├── models/                  # AI 配置、聊天消息、文章内容、用户画像等模型
+│   ├── providers/               # AI 对话、AI 日报、AI 周报、AI TODO、用户上下文
+│   ├── repositories/            # 不同 AI 服务商仓库实现
+│   ├── services/                # AIService、正文抽取、聊天记录、浏览历史、用户上下文
+│   └── ui/                      # AI 相关页面与浮层组件
+├── base/                        # 基础响应封装
+├── local/                       # MMKV、本地搜索历史等轻量存储
+├── model/                       # 文章、项目、消息、Todo、用户、数据库模型
+├── pages/
+│   ├── ai/                      # AI 聊天页
+│   ├── article/                 # 首页文章、搜索
+│   ├── chapter/                 # 导航、广场、每日问答
+│   ├── coin/                    # 积分与排行
+│   ├── collect/                 # 收藏
+│   ├── drawer/                  # 侧边栏及其子页面
+│   │   ├── message/             # 消息通知
+│   │   ├── note/                # 笔记
+│   │   └── todo/                # TODO 与番茄钟
+│   ├── homepage/                # 主导航页
+│   ├── knowledgeTree/           # 知识体系与图谱
+│   ├── login/                   # 登录注册
+│   ├── settings/                # 设置
+│   ├── widget/                  # 通用卡片与组件
+│   └── wxmp/                    # 公众号文章
+├── providers/                   # 通用业务 Provider 与分页基类
+├── remote/
+│   ├── service/                 # NetworkService、缓存、接口抽象
+│   ├── Api.dart                 # API 请求与响应定义
+│   ├── CgiArticle.dart          # 文章业务封装
+│   ├── CgiCollect.dart          # 收藏业务封装
+│   ├── CgiTodo.dart             # Todo 业务封装
+│   └── CgiUser.dart             # 用户业务封装
+├── utils/                       # 主题、动画、鉴权、平台适配、颜色
+└── main.dart                    # 应用入口
 ```
-
-### 五层架构
-
-```
-┌─────────────────────────────────────┐
-│         UI Layer (pages/)           │  Cupertino 风格 UI
-├─────────────────────────────────────┤
-│    State Management (providers/)    │  Riverpod Provider
-├─────────────────────────────────────┤
-│    Business Logic (remote/Cgi*.dart)│  业务逻辑封装
-├─────────────────────────────────────┤
-│   Network Layer (NetworkService)    │  Dio + 链式调用
-├─────────────────────────────────────┤
-│      Data Layer (model/ + local/)   │  数据模型 + 存储
-└─────────────────────────────────────┘
-```
-
-### 核心设计模式
-
-#### 1. 网络请求流程
-
-```dart
-// API 定义
-class ArticleListReq {
-  final int page;
-  String get path => '/article/list/$page/json';
-}
-
-class ArticleListResp {
-  final List<Article> datas;
-  ArticleListResp.fromJson(Map<String, dynamic> json);
-}
-
-// Cgi 业务层
-class CgiArticle {
-  Future<List<Article>> fetchArticleList(int page) {
-    return NetworkService.get<ArticleListResp>(
-      url: ArticleListReq(page: page).path,
-      fromJsonT: ArticleListResp.fromJson,
-    ).getData().then((value) => value.datas);
-  }
-}
-
-// Provider 状态管理
-final articleListProvider = StateNotifierProvider<ArticleListNotifier, AsyncValue<List<Article>>>((ref) {
-  return ArticleListNotifier(CgiArticle());
-});
-
-class ArticleListNotifier extends PaginationNotifier<Article> {
-  ArticleListNotifier(this._cgiService) : super(
-    fetchFunction: (page, pageSize) => _cgiService.fetchArticleList(page),
-    defaultPageSize: 20,
-    enableCache: true,
-  );
-  final CgiArticle _cgiService;
-}
-```
-
-#### 2. 分页加载
-
-```dart
-// 继承 PaginationNotifier 基类
-class MyListNotifier extends PaginationNotifier<MyModel> {
-  MyListNotifier(this._cgiService) : super(
-    fetchFunction: (page, pageSize) async {
-      return await _cgiService.fetchMyData(page, pageSize: pageSize);
-    },
-    defaultPageSize: 10,
-    enableCache: true,
-  );
-  final CgiMyFeature _cgiService;
-}
-
-// UI 层使用
-ref.read(myListProvider.notifier).loadMore();  // 加载更多
-ref.read(myListProvider.notifier).refresh();   // 下拉刷新
-```
-
-#### 3. 状态管理
-
-- **分页列表**: `PaginationNotifier<T>` 基类
-- **一次性数据**: `FutureProvider`
-- **可变状态**: `StateNotifierProvider`
-- **全局状态**: `Provider`
 
 ---
 
-## 开发指南
+## 架构摘要
 
-### 添加新功能
+### 1. 导航组织
 
-按照以下步骤添加新功能（以「我的收藏」为例）：
+- `main.dart` 负责初始化 `MMKV`、`NetworkService`、全局 `ProviderContainer`
+- `MainPage` 负责 6 个主 Tab 的延迟加载与主界面切换
+- `HomeSlider` 负责侧边栏能力入口，包括 TODO、笔记、统计、AI 配置、日报周报等
 
-#### 1. 定义 API（`lib/remote/Api.dart`）
+### 2. 通用分页基类
 
-```dart
-const URL_COLLECT_LIST = '/lg/collect/list';
+项目中的列表状态大量复用 `lib/providers/pagination_provider.dart` 里的 `PaginationNotifier<T>`：
 
-class CollectListReq {
-  final int page;
-  CollectListReq({required this.page});
-  String get path => '$URL_COLLECT_LIST/$page/json';
-}
+- 封装首次加载、刷新、加载更多
+- 内置简单缓存
+- 可配置 `pageSize`
+- 统一输出 `AsyncValue<List<T>>`
 
-class CollectListResp {
-  final List<Article> datas;
-  CollectListResp.fromJson(Map<String, dynamic> json);
-}
-```
+这让文章流、列表页等数据加载模式更统一，Provider 层代码也更薄。
 
-#### 2. 实现 Cgi 业务层（`lib/remote/CgiCollect.dart`）
+### 3. AI 服务层设计
 
-```dart
-class CgiCollect {
-  Future<List<Article>> fetchCollectList(int page) {
-    final req = CollectListReq(page: page);
-    return NetworkService.get<CollectListResp>(
-      url: req.path,
-      fromJsonT: CollectListResp.fromJson,
-    ).getData().then((value) => value.datas);
-  }
-}
-```
+`lib/ai/services/ai_service.dart` 是 AI 业务核心基类，负责：
 
-#### 3. 创建 Provider（`lib/providers/collect_provider.dart`）
+- 构建不同场景的消息模板
+- 统一处理文章上下文注入
+- 支持纯对话、文章问答、笔记续写、笔记润色、日报、TODO 助手等多种 prompt 通道
+- 通过 Repository 委托到具体模型服务商
+- 支持流式输出与历史压缩
 
-```dart
-final collectListProvider = StateNotifierProvider<CollectListNotifier, AsyncValue<List<Article>>>((ref) {
-  return CollectListNotifier(CgiCollect());
-});
+对应的 `AIProviderManager` 则负责多服务商配置的本地持久化与激活切换。
 
-class CollectListNotifier extends PaginationNotifier<Article> {
-  CollectListNotifier(this._cgiService) : super(
-    fetchFunction: (page, pageSize) => _cgiService.fetchCollectList(page),
-    defaultPageSize: 20,
-    enableCache: false,
-  );
-  final CgiCollect _cgiService;
-}
-```
+### 4. 内容抽取与平台策略
 
-#### 4. 实现 UI（`lib/pages/collect/collect_list_page.dart`）
+`lib/ai/services/content_extractor.dart` 使用策略模式识别不同内容平台：
 
-```dart
-class CollectListPage extends ConsumerStatefulWidget {
-  const CollectListPage({super.key});
+- CSDN
+- 掘金
+- 微信公众号
+- Generic fallback
 
-  @override
-  ConsumerState<CollectListPage> createState() => _CollectListPageState();
-}
+这样 AI 获取到的是更干净的正文内容，而不是整页 WebView 噪音。
 
-class _CollectListPageState extends ConsumerState<CollectListPage> {
-  final ScrollController _scrollController = ScrollController();
+### 5. 用户画像与周期总结
 
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
+应用会在后台采集阅读、收藏、笔记、TODO 等行为，形成 `UserContext`，并供 AI 场景复用：
 
-  void _onScroll() {
-    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-      ref.read(collectListProvider.notifier).loadMore();
-    }
-  }
+- `user_context_provider.dart` 负责上下文初始化与防抖刷新
+- `ai_daily_report_provider.dart` 汇总当天活动，生成结构化日报
+- `ai_weekly_report_provider.dart` 汇总本周活动，生成结构化周报并持久化历史
 
-  Future<void> _onRefresh() async {
-    await ref.read(collectListProvider.notifier).refresh();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dataAsync = ref.watch(collectListProvider);
-
-    return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(middle: Text('我的收藏')),
-      child: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _onRefresh,
-          child: dataAsync.when(
-            loading: () => const Center(child: CupertinoActivityIndicator()),
-            error: (error, stack) => _buildErrorView(error),
-            data: (items) => _buildListView(items),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildListView(List<Article> items) {
-    return ListView.builder(
-      controller: _scrollController,
-      itemCount: items.length + 1,
-      itemBuilder: (context, index) {
-        if (index == items.length) {
-          return _buildLoadMoreIndicator();
-        }
-        return ArticleCard(article: items[index]);
-      },
-    );
-  }
-}
-```
-
-### 本地存储
-
-在 `lib/local/KV.dart` 中添加新的存储项：
-
-```dart
-const KEY_MY_SETTING = 'my_setting';
-
-void saveMySetting(String value) {
-  Kv.encodeString(KEY_MY_SETTING, value);
-}
-
-String? getMySetting() {
-  return Kv.decodeString(KEY_MY_SETTING);
-}
-```
-
-### 代码规范
-
-- **命名规范**: 遵循 Dart 命名规范（驼峰命名）
-- **文件命名**: 小写+下划线（如 `article_list_page.dart`）
-- **常量命名**: 全大写+下划线（如 `URL_ARTICLE_LIST`）
-- **类命名**: 大驼峰（如 `ArticleListPage`）
-- **方法命名**: 小驼峰（如 `fetchArticleList`）
-- **优先使用 const**: 提高性能
-- **空安全**: 正确使用 `?` 和 `!`
-
-### 性能优化
-
-- **分页加载**: 避免一次性加载过多数据
-- **图片缓存**: 使用 `cached_network_image`
-- **列表优化**: 使用 `ListView.builder`
-- **状态缓存**: 合理使用 `enableCache`
-- **dispose 资源**: 及时释放 Controller 和 Listener
+这使 AI 不再只是单次问答，而是逐步演化成围绕用户长期行为工作的个人学习助手。
 
 ---
 
-## API 文档
+## API
 
-### Base URL
+Base URL:
 
-```
+```text
 https://www.wanandroid.com
 ```
 
-### 常用接口
+常用接口包括：
 
-| 功能 | 方法 | 端点 | 参数 |
-|------|------|------|------|
-| 首页文章列表 | GET | `/article/list/{page}/json` | page: 页码（从0开始） |
-| Banner | GET | `/banner/json` | - |
-| 登录 | POST | `/user/login` | username, password |
-| 注册 | POST | `/user/register` | username, password, repassword |
-| 收藏列表 | GET | `/lg/collect/list/{page}/json` | page: 页码（从0开始） |
-| 收藏文章 | POST | `/lg/collect/{id}/json` | id: 文章ID |
-| 取消收藏 | POST | `/lg/uncollect_originId/{id}/json` | id: 文章ID |
-| 搜索 | POST | `/article/query/{page}/json` | k: 关键词 |
-| 知识体系 | GET | `/tree/json` | - |
-| 项目分类 | GET | `/project/tree/json` | - |
+| 功能 | 方法 | 端点 |
+|------|------|------|
+| 首页文章列表 | GET | `/article/list/{page}/json` |
+| Banner | GET | `/banner/json` |
+| 登录 | POST | `/user/login` |
+| 注册 | POST | `/user/register` |
+| 收藏列表 | GET | `/lg/collect/list/{page}/json` |
+| 搜索 | POST | `/article/query/{page}/json` |
+| 知识体系 | GET | `/tree/json` |
+| 项目分类 | GET | `/project/tree/json` |
 
-详细 API 文档请参考：[WanAndroid API](https://www.wanandroid.com/blog/show/2)
+WanAndroid 官方接口文档：[WanAndroid API](https://www.wanandroid.com/blog/show/2)
 
 ---
 
-## AI 功能配置
+## 开发说明
 
-### 支持的 AI 服务商
-
-- **OpenAI**: GPT-3.5/4/4o
-- **Anthropic**: Claude 3 系列
-- **Google**: Gemini 1.5/2.0
-- **智谱 AI**: GLM-4 系列
-- **阿里云**: 通义千问
-- **DeepSeek**: DeepSeek Chat
-- **Moonshot**: Kimi Chat
-- **硅基流动**: 多模型支持
-
-### 配置步骤
-
-1. 打开侧边栏 → 点击「AI 配置」
-2. 选择预设服务商或自定义
-3. 填写 API Key
-4. 测试连接是否成功
-5. 保存配置
-
-### 使用场景
-
-- 阅读技术文章时，快速总结要点
-- 深入解析文章内容
-- 分析技术优缺点
-- 获取实践建议
-- 探索相关技术
-
----
-
-## 贡献指南
-
-欢迎贡献代码！请遵循以下流程：
-
-1. Fork 本项目
-2. 创建特性分支（`git checkout -b feature/AmazingFeature`）
-3. 提交更改（`git commit -m 'Add some AmazingFeature'`）
-4. 推送到分支（`git push origin feature/AmazingFeature`）
-5. 提交 Pull Request
-
-### 提交规范
-
-使用语义化提交信息：
-
-- `feat`: 新功能
-- `fix`: 修复 Bug
-- `docs`: 文档更新
-- `style`: 代码格式调整
-- `refactor`: 代码重构
-- `test`: 测试相关
-- `chore`: 构建/工具链相关
-
-示例：
-```
-feat: 添加文章搜索功能
-fix: 修复收藏列表分页问题
-docs: 更新 README 安装步骤
-```
-
----
-
-## 常见问题
-
-### 1. 编译失败
+### 常见命令
 
 ```bash
-# 清理缓存
+flutter pub get
+flutter run
+flutter test
+flutter analyze
+```
+
+### 常见问题
+
+编译失败时可先执行：
+
+```bash
 flutter clean
 flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
-### 2. iOS 编译失败
+iOS 依赖异常时可尝试：
 
 ```bash
 cd ios
@@ -518,48 +469,19 @@ cd ..
 flutter run
 ```
 
-### 3. MMKV 初始化失败
-
-确保在 `main()` 函数中初始化：
-
-```dart
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Kv.initialize();
-  runApp(const MyApp());
-}
-```
-
-### 4. AI 功能无法使用
-
-- 检查网络连接
-- 确认 API Key 正确
-- 使用「测试配置」功能验证
-- 查看日志输出（开发模式）
-
 ---
 
-## 许可证
+## Roadmap
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+- 继续扩展 AI 对阅读、笔记、待办之间的联动
+- 打磨 AI 场景下的用户画像
+- 完善更多内容平台的正文抽取策略
+- 继续优化多端体验与主题细节
 
 ---
 
 ## 致谢
 
-- [WanAndroid](https://www.wanandroid.com/) - 提供优质的学习资源和 API
-- [Flutter](https://flutter.dev/) - 强大的跨平台框架
-- [Riverpod](https://riverpod.dev/) - 优雅的状态管理方案
-
----
-
-## 联系方式
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/flutter_wanandroid/issues)
-- **Email**: your.email@example.com
-
----
-
-<div align="center">
-  <p>如果这个项目对你有帮助，请给一个 ⭐️ Star 支持一下！</p>
-</div>
+- [WanAndroid](https://www.wanandroid.com/)
+- [Flutter](https://flutter.dev/)
+- [Riverpod](https://riverpod.dev/)
