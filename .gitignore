@@ -58,5 +58,4 @@ WEBVIEW_AND_QUESTION_CARD_UPDATE.md
 *.dart1
 
 *.g.dart
-!lib/model/login/User.g.dart
 
