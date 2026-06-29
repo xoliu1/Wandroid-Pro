@@ -5,6 +5,7 @@ import '../core/constants.dart';
 import '../core/logger.dart';
 import '../core/result.dart';
 import '../models/ai_provider_config.dart';
+import 'openai_sse_parser.dart';
 
 /// AI 对话 Repository 接口
 abstract class AIRepository {
@@ -100,36 +101,15 @@ class OpenAICompatibleRepository implements AIRepository {
       await for (var chunk in stream) {
         final text = utf8.decode(chunk);
         buffer += text;
-        
-        final lines = buffer.split('\n');
-        buffer = lines.last;
-        
-        for (var i = 0; i < lines.length - 1; i++) {
-          final line = lines[i];
-          
-          if (line.isEmpty || !line.startsWith('data: ')) {
-            continue;
-          }
-          
-          final data = line.substring(6).trim();
-          
-          if (data == '[DONE]') {
-            AILogger.info('流式响应完成', tag: AIConstants.tagRepository);
-            break;
-          }
-          
-          try {
-            final json = jsonDecode(data);
-            final delta = json['choices']?[0]?['delta'];
-            final content = delta?['content'];
-            
-            if (content != null && content.isNotEmpty) {
-              yield content as String;
-            }
-          } catch (e) {
-            AILogger.warning('解析 SSE 数据失败: $e', tag: AIConstants.tagRepository);
-            continue;
-          }
+        final result = OpenAISSEParser.parse(buffer);
+        buffer = result.remainingBuffer;
+
+        if (result.sawDone) {
+          AILogger.info('流式响应完成', tag: AIConstants.tagRepository);
+        }
+
+        for (final delta in result.deltas) {
+          yield delta;
         }
       }
 

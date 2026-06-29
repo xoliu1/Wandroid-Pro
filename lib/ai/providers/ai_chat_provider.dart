@@ -1,13 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wanandroid_pro/model/db/sqflite.dart';
 import 'package:wanandroid_pro/model/note.dart';
+import '../core/diagnostics.dart';
 import '../core/logger.dart';
 import '../core/constants.dart';
+import '../models/ai_contract.dart';
 import '../models/ai_provider_config.dart';
 import '../models/article_content.dart';
+import '../models/ai_request_status.dart';
 import '../models/chat_message.dart';
 import '../models/chat_history.dart';
-import '../services/ai_service.dart';
+import '../services/ai_client.dart';
+import '../services/ai_message_composer.dart';
 import '../services/chat_history_db.dart';
 import 'ai_provider_manager.dart';
 
@@ -17,12 +21,14 @@ class AIChatState {
   final bool isLoading;
   final String? error;
   final ArticleContent? article;
+  final AIRequestStatus status;
 
   const AIChatState({
     this.messages = const [],
     this.isLoading = false,
     this.error,
     this.article,
+    this.status = AIRequestStatus.idle,
   });
 
   AIChatState copyWith({
@@ -31,12 +37,14 @@ class AIChatState {
     String? error,
     bool clearError = false,
     ArticleContent? article,
+    AIRequestStatus? status,
   }) {
     return AIChatState(
       messages: messages ?? this.messages,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
       article: article ?? this.article,
+      status: status ?? this.status,
     );
   }
 
@@ -47,10 +55,11 @@ class AIChatState {
           runtimeType == other.runtimeType &&
           messages == other.messages &&
           isLoading == other.isLoading &&
-          error == other.error;
+          error == other.error &&
+          status == other.status;
 
   @override
-  int get hashCode => Object.hash(messages, isLoading, error);
+  int get hashCode => Object.hash(messages, isLoading, error, status);
 }
 
 /// AI 对话 Provider
@@ -58,7 +67,7 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
   AIChatNotifier(this._config, this._article, {bool isPlainChat = false}) 
       : _isPlainChat = isPlainChat,
         super(_config == null 
-            ? AIChatState(article: _article, error: '请先配置 AI 服务')
+            ? AIChatState(article: _article, error: '请先配置 AI 服务', status: AIRequestStatus.error)
             : AIChatState(article: _article)) {
     if (_config != null) {
       AILogger.info('初始化 AIChatNotifier: ${_article.title} (纯对话: $isPlainChat)', tag: AIConstants.tagProvider);
@@ -69,7 +78,7 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
   final AIProviderConfig? _config;
   final ArticleContent _article;
   final bool _isPlainChat;
-  AIService? _aiService;
+  AIClient? _aiClient;
   final _db = ChatHistoryDatabase();
 
   /// 从数据库加载对话历史
@@ -122,21 +131,28 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
   @override
   void dispose() {
     // 取消正在进行的请求
-    _aiService?.cancelCurrentRequest();
+    _aiClient?.cancelCurrentRequest();
     AILogger.info('清理 AIChatNotifier 资源', tag: AIConstants.tagProvider);
     super.dispose();
   }
 
   /// 手动取消请求（供外部调用）
   void cancelRequest() {
-    _aiService?.cancelCurrentRequest();
+    _aiClient?.cancelCurrentRequest();
+    if (state.isLoading) {
+      state = state.copyWith(
+        isLoading: false,
+        error: AIConstants.errorCancelled,
+        status: AIRequestStatus.cancelled,
+      );
+    }
     AILogger.info('手动取消 AI 请求', tag: AIConstants.tagProvider);
   }
 
   /// 初始化 AI 服务
   void _initService() {
     if (_config == null) return;
-    _aiService ??= AIService(_config);
+    _aiClient ??= AIClient(_config);
   }
 
   /// 发送消息
@@ -147,6 +163,18 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
       state = state.copyWith(error: '请先配置 AI 服务');
       return;
     }
+
+    if (state.isLoading) {
+      AIDiagnosticsStore.instance.record(
+        scene: _isPlainChat ? 'plain_chat' : 'article_chat',
+        level: 'warning',
+        message: 'duplicate request ignored',
+        metadata: {
+          'articleUrl': _article.url,
+        },
+      );
+      return;
+    }
     
     if (content.trim().isEmpty) {
       AILogger.warning('消息为空，取消发送', tag: AIConstants.tagProvider);
@@ -154,7 +182,10 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
     }
 
     _initService();
-    AILogger.info('开始发送消息: $content', tag: AIConstants.tagProvider);
+    AILogger.info(
+      '开始发送消息: ${AILogger.previewText(content)}',
+      tag: AIConstants.tagProvider,
+    );
     if (systemContext != null) {
       AILogger.debug('携带系统上下文: ${systemContext.length} 字符', tag: AIConstants.tagProvider);
     }
@@ -173,6 +204,7 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
       messages: [...state.messages, userMessage, aiMessage],
       isLoading: true,
       clearError: true,
+      status: AIRequestStatus.loading,
     );
 
     // 构建消息历史
@@ -187,11 +219,11 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
 
     // 根据是否为纯对话选择不同的消息构建方式
     final messages = _isPlainChat
-        ? AIService.buildPlainMessages(
+        ? AIMessageComposer.plainChat(
             userQuestion: effectiveUserQuestion,
             history: history.isEmpty ? null : history,
           )
-        : AIService.buildMessagesWithArticle(
+        : AIMessageComposer.articleChat(
             article: _article,
             userQuestion: effectiveUserQuestion,
             history: history.isEmpty ? null : history,
@@ -203,36 +235,109 @@ class AIChatNotifier extends StateNotifier<AIChatState> {
     const updateInterval = 3; // 每 3 个 chunk 更新一次（更实时的流式体验）
 
     try {
-      final stream = _aiService!.sendChatStream(messages: messages);
+      final scene = _isPlainChat ? 'plain_chat' : 'article_chat';
+      final stream = _aiClient!.sendStream(
+        scene: scene,
+        messages: messages,
+        maxRetries: 1,
+        metadata: {
+          'articleUrl': _article.url,
+          'articleTitle': _article.title,
+        },
+      );
 
-      await for (final chunk in stream) {
-        responseBuffer.write(chunk);
-        updateCounter++;
+      await for (final event in stream) {
+        switch (event.type) {
+          case AIStreamEventType.deltaText:
+            if (event.deltaText == null || event.deltaText!.isEmpty) {
+              continue;
+            }
+            responseBuffer.write(event.deltaText!);
+            updateCounter++;
 
-        // 性能优化：减少更新频率，降低 UI 重建压力
-        if (updateCounter >= updateInterval) {
-          _updateAIMessage(aiMessage.id, responseBuffer.toString(), MessageStatus.streaming);
-          updateCounter = 0;
+            if (updateCounter >= updateInterval) {
+              _updateAIMessage(
+                aiMessage.id,
+                responseBuffer.toString(),
+                MessageStatus.streaming,
+              );
+              updateCounter = 0;
+            }
+            break;
+          case AIStreamEventType.completed:
+            final fullResponse = event.response?.content ?? responseBuffer.toString();
+            _updateAIMessage(aiMessage.id, fullResponse, MessageStatus.completed);
+            state = state.copyWith(
+              isLoading: false,
+              status: AIRequestStatus.completed,
+            );
+            await _saveHistoryToDB();
+            AILogger.success(
+              '消息发送完成，共 ${fullResponse.length} 字符',
+              tag: AIConstants.tagProvider,
+            );
+            break;
+          case AIStreamEventType.cancelled:
+            _updateAIMessage(
+              aiMessage.id,
+              responseBuffer.toString(),
+              responseBuffer.length == 0 ? MessageStatus.error : MessageStatus.completed,
+            );
+            state = state.copyWith(
+              isLoading: false,
+              error: event.error?.message ?? AIConstants.errorCancelled,
+              status: AIRequestStatus.cancelled,
+            );
+            break;
+          case AIStreamEventType.retrying:
+            state = state.copyWith(
+              isLoading: true,
+              error: event.error?.message,
+              status: AIRequestStatus.retrying,
+            );
+            break;
+          case AIStreamEventType.failed:
+            final errorMessage = event.error?.message ?? AIConstants.errorUnknown;
+            state = state.copyWith(
+              error: errorMessage,
+              isLoading: false,
+              status: _mapErrorToStatus(event.error),
+            );
+            _updateAIMessage(
+              aiMessage.id,
+              '抱歉，发生了错误：$errorMessage',
+              MessageStatus.error,
+            );
+            break;
+          case AIStreamEventType.started:
+          case AIStreamEventType.toolCallRequested:
+          case AIStreamEventType.toolCallResult:
+          case AIStreamEventType.usageUpdated:
+            break;
         }
       }
-
-      // 最终更新（确保完整内容显示）
-      final fullResponse = responseBuffer.toString();
-      _updateAIMessage(aiMessage.id, fullResponse, MessageStatus.completed);
-      state = state.copyWith(isLoading: false);
-      
-      // 保存对话历史到数据库
-      await _saveHistoryToDB();
-      
-      AILogger.success('消息发送完成，共 ${fullResponse.length} 字符', tag: AIConstants.tagProvider);
     } catch (e, stackTrace) {
       AILogger.error('消息发送失败', tag: AIConstants.tagProvider, error: e, stackTrace: stackTrace);
 
       state = state.copyWith(
         error: e.toString(),
         isLoading: false,
+        status: AIRequestStatus.error,
       );
       _updateAIMessage(aiMessage.id, '抱歉，发生了错误：$e', MessageStatus.error);
+    }
+  }
+
+  AIRequestStatus _mapErrorToStatus(AIErrorInfo? error) {
+    switch (error?.type) {
+      case AIErrorType.timeout:
+        return AIRequestStatus.timedOut;
+      case AIErrorType.rateLimited:
+        return AIRequestStatus.rateLimited;
+      case AIErrorType.cancelled:
+        return AIRequestStatus.cancelled;
+      default:
+        return AIRequestStatus.error;
     }
   }
 

@@ -10,13 +10,12 @@ void main() {
     });
 
     test('应该返回默认预设问题', () {
-      final defaultPresets = service._getDefaultPresets();
+      final defaultPresets = service.getDefaultPresetsForTest();
       
-      expect(defaultPresets.length, 4);
-      expect(defaultPresets[0].title, '开始聊天');
-      expect(defaultPresets[1].title, '帮我解答问题');
-      expect(defaultPresets[2].title, '帮我写点东西');
-      expect(defaultPresets[3].title, '给我一些建议');
+      expect(defaultPresets.length, greaterThanOrEqualTo(10));
+      expect(defaultPresets.any((p) => p.title == '学习方法优化'), true);
+      expect(defaultPresets.any((p) => p.title == '代码优化建议'), true);
+      expect(defaultPresets.any((p) => p.title == '项目创意启发'), true);
     });
 
     test('应该根据上下文生成预设问题', () {
@@ -43,13 +42,13 @@ void main() {
         },
       };
 
-      final presets = service._generatePresetsFromContext(context);
+      final presets = service.generatePresetsFromContextForTest(context);
 
       expect(presets.length, greaterThan(0));
-      expect(presets.any((p) => p.icon == '📖'), true); // 有学习总结类预设
-      expect(presets.any((p) => p.icon == '✅'), true); // 有任务规划类预设
-      expect(presets.any((p) => p.icon == '🎯'), true); // 有成果总结类预设
-      expect(presets.any((p) => p.icon == '📝'), true); // 有笔记整理类预设
+      expect(presets.any((p) => p.title == '总结今天的学习'), true);
+      expect(presets.any((p) => p.title == '任务优先级建议'), true);
+      expect(presets.any((p) => p.title == '学习效率分析'), true);
+      expect(presets.any((p) => p.title == '知识盲点分析'), true);
     });
 
     test('空上下文应该返回空预设列表', () {
@@ -60,10 +59,9 @@ void main() {
         'categories': {'hasData': false},
       };
 
-      final presets = service._generatePresetsFromContext(context);
+      final presets = service.generatePresetsFromContextForTest(context);
 
-      // 即使没有数据，也会有通用的学习建议预设
-      expect(presets.length, greaterThanOrEqualTo(0));
+      expect(presets, isEmpty);
     });
 
     test('生成的预设应该包含个性化信息', () {
@@ -84,13 +82,12 @@ void main() {
         },
       };
 
-      final presets = service._generatePresetsFromContext(context);
+      final presets = service.generatePresetsFromContextForTest(context);
       
-      // 应该包含最近浏览文章标题的预设
-      final hasArticleRelated = presets.any((p) => 
-        p.prompt.contains('深入理解 Flutter Widget')
+      final hasContextAttached = presets.any((p) =>
+        (p.context ?? '').contains('深入理解 Flutter Widget')
       );
-      expect(hasArticleRelated, true);
+      expect(hasContextAttached, true);
     });
 
     test('预设数量不应超过最大限制', () async {
@@ -122,11 +119,10 @@ void main() {
         },
       };
 
-      final presets = service._generatePresetsFromContext(context);
+      final presets = service.generatePresetsFromContextForTest(context);
 
-      // 生成的预设可能很多，但最终返回时会限制在 6 个以内
-      // 这个逻辑在 generateSmartPresets() 方法中
       expect(presets.length, greaterThan(0));
+      expect(presets.length, lessThanOrEqualTo(6));
     });
   });
 }

@@ -38,6 +38,18 @@ final smartPresetsProvider = FutureProvider.autoDispose<List<PresetCategory>>((r
 
 /// 智能预设生成服务
 class SmartPresetsService {
+  List<PresetQuestion> getDefaultPresetsForTest() {
+    return _getDefaultCategories()
+        .expand((category) => category.questions)
+        .toList();
+  }
+
+  List<PresetQuestion> generatePresetsFromContextForTest(
+    Map<String, dynamic> context,
+  ) {
+    return _generatePersonalizedCategory(context).questions;
+  }
+
   /// 生成智能预设分类
   Future<List<PresetCategory>> generateSmartPresets() async {
     final categories = <PresetCategory>[];
@@ -278,94 +290,110 @@ class SmartPresetsService {
 
   /// 构建上下文信息字符串，将原始数据格式化后传递给 AI
   String _buildContextInfo(Map<String, dynamic> context) {
-    final buffer = StringBuffer();
+    final sections = <String>[];
     final now = DateTime.now();
     final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    
-    buffer.writeln('【我的学习数据】');
-    buffer.writeln('当前日期：$dateStr ${_getWeekday(now.weekday)}');
 
     // 1. 浏览记录 - 提供详细的文章列表
     final browsing = context['recentBrowsing'] as Map<String, dynamic>?;
     if (browsing != null && browsing['hasData'] == true) {
+      final section = StringBuffer();
       final todayCount = browsing['todayCount'] as int? ?? 0;
       final records = browsing['detailedRecords'] as List<dynamic>? ?? [];
+      final recentTitles = browsing['recentTitles'] as List<dynamic>? ?? [];
       
-      buffer.writeln('\n📚 浏览记录：');
-      buffer.writeln('- 今日浏览：$todayCount 篇文章');
-      buffer.writeln('- 最近浏览记录（含时间）：');
-      
-      for (var i = 0; i < records.length && i < 5; i++) {
-        final record = records[i] as Map<String, dynamic>;
-        final title = record['title'] as String;
-        final visitedAt = record['visitedAt'] as String;
-        final duration = record['duration'] as int?;
-        final category = record['category'] as String? ?? '';
-        
-        final time = DateTime.parse(visitedAt);
-        final timeStr = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-        
-        buffer.write('  ${i + 1}. $title ($timeStr');
-        if (duration != null && duration > 0) {
-          buffer.write(', 停留${duration}秒');
+      section.writeln('📚 浏览记录：');
+      section.writeln('- 今日浏览：$todayCount 篇文章');
+
+      if (records.isNotEmpty) {
+        section.writeln('- 最近浏览记录（含时间）：');
+
+        for (var i = 0; i < records.length && i < 5; i++) {
+          final record = records[i] as Map<String, dynamic>;
+          final title = record['title'] as String;
+          final visitedAt = record['visitedAt'] as String;
+          final duration = record['duration'] as int?;
+          final category = record['category'] as String? ?? '';
+
+          final time = DateTime.parse(visitedAt);
+          final timeStr = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
+          section.write('  ${i + 1}. $title ($timeStr');
+          if (duration != null && duration > 0) {
+            section.write(', 停留${duration}秒');
+          }
+          if (category.isNotEmpty) {
+            section.write(', 分类:$category');
+          }
+          section.writeln(')');
         }
-        if (category.isNotEmpty) {
-          buffer.write(', 分类:$category');
+      } else if (recentTitles.isNotEmpty) {
+        section.writeln('- 最近浏览标题：');
+        for (var i = 0; i < recentTitles.length && i < 5; i++) {
+          section.writeln('  ${i + 1}. ${recentTitles[i]}');
         }
-        buffer.writeln(')');
+      }
+
+      if (section.toString().trim().isNotEmpty) {
+        sections.add(section.toString().trim());
       }
     }
 
     // 2. 待办任务 - 提供详细的任务列表
     final todos = context['todos'] as Map<String, dynamic>?;
     if (todos != null && todos['hasData'] == true) {
+      final section = StringBuffer();
       final pendingCount = todos['pendingCount'] as int? ?? 0;
       final todayCompleted = todos['todayCompletedCount'] as int? ?? 0;
       final pendingTasks = todos['pendingTasks'] as List<dynamic>? ?? [];
       final completedTasks = todos['completedTasks'] as List<dynamic>? ?? [];
       
-      buffer.writeln('\n✅ 待办任务：');
-      buffer.writeln('- 待完成：$pendingCount 个');
-      buffer.writeln('- 今日已完成：$todayCompleted 个');
+      section.writeln('✅ 待办任务：');
+      section.writeln('- 待完成：$pendingCount 个');
+      section.writeln('- 今日已完成：$todayCompleted 个');
       
       if (pendingTasks.isNotEmpty) {
-        buffer.writeln('- 待办事项列表：');
+        section.writeln('- 待办事项列表：');
         for (var i = 0; i < pendingTasks.length && i < 5; i++) {
           final task = pendingTasks[i] as Map<String, dynamic>;
           final title = task['title'] as String;
           final priority = task['priority'] as int? ?? 0;
           final date = task['date'] as String? ?? '';
           
-          buffer.write('  ${i + 1}. $title');
+          section.write('  ${i + 1}. $title');
           if (priority > 0) {
-            buffer.write(' [优先级: $priority]');
+            section.write(' [优先级: $priority]');
           }
           if (date.isNotEmpty) {
-            buffer.write(' (截止: $date)');
+            section.write(' (截止: $date)');
           }
-          buffer.writeln();
+          section.writeln();
         }
       }
       
       if (completedTasks.isNotEmpty) {
-        buffer.writeln('- 今日已完成任务：');
+        section.writeln('- 今日已完成任务：');
         for (var i = 0; i < completedTasks.length && i < 3; i++) {
           final task = completedTasks[i] as Map<String, dynamic>;
           final title = task['title'] as String;
-          buffer.writeln('  ${i + 1}. $title');
+          section.writeln('  ${i + 1}. $title');
         }
       }
+
+      sections.add(section.toString().trim());
     }
 
     // 3. 笔记记录
     final notes = context['recentNotes'] as Map<String, dynamic>?;
     if (notes != null && notes['hasData'] == true) {
+      final section = StringBuffer();
       final totalCount = notes['totalCount'] as int? ?? 0;
       final todayCount = notes['todayCount'] as int? ?? 0;
       
-      buffer.writeln('\n📝 笔记记录：');
-      buffer.writeln('- 总笔记数：$totalCount 条');
-      buffer.writeln('- 今日新增：$todayCount 条');
+      section.writeln('📝 笔记记录：');
+      section.writeln('- 总笔记数：$totalCount 条');
+      section.writeln('- 今日新增：$todayCount 条');
+      sections.add(section.toString().trim());
     }
 
     // 4. 浏览分类统计
@@ -374,16 +402,27 @@ class SmartPresetsService {
       final topCategories = categories['topCategories'] as List<dynamic>? ?? [];
       
       if (topCategories.isNotEmpty) {
-        buffer.writeln('\n🔖 学习方向统计：');
+        final section = StringBuffer();
+        section.writeln('🔖 学习方向统计：');
         for (var i = 0; i < topCategories.length && i < 5; i++) {
           final cat = topCategories[i];
           final category = cat['category'] as String;
           final count = cat['count'] as int;
-          buffer.writeln('  ${i + 1}. $category - 浏览了 $count 次');
+          section.writeln('  ${i + 1}. $category - 浏览了 $count 次');
         }
+        sections.add(section.toString().trim());
       }
     }
 
+    if (sections.isEmpty) {
+      return '';
+    }
+
+    final buffer = StringBuffer();
+    buffer.writeln('【我的学习数据】');
+    buffer.writeln('当前日期：$dateStr ${_getWeekday(now.weekday)}');
+    buffer.writeln();
+    buffer.write(sections.join('\n\n'));
     return buffer.toString().trim();
   }
 

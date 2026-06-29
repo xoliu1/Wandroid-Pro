@@ -1,14 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mmkv/mmkv.dart';
 
 import '../models/ai_provider_config.dart';
+import '../services/ai_provider_storage.dart';
 
 /// AI 配置存储 KEY
 const _KEY_AI_PROVIDERS = 'ai_providers';
-const _KEY_ACTIVE_PROVIDER_ID = 'active_provider_id';
-
 /// AI 提供商管理器 Provider
 final aiProviderManagerProvider =
     StateNotifierProvider<AIProviderManager, List<AIProviderConfig>>((ref) {
@@ -27,25 +23,20 @@ final activeAIProviderProvider = Provider<AIProviderConfig?>((ref) {
 
 /// AI 提供商管理器
 class AIProviderManager extends StateNotifier<List<AIProviderConfig>> {
-  AIProviderManager() : super([]) {
+  AIProviderManager({
+    AIProviderStorage? storage,
+  })  : _storage = storage ?? AIProviderStorage(),
+        super([]) {
     _loadProviders();
   }
+
+  final AIProviderStorage _storage;
 
   /// 加载保存的配置
   Future<void> _loadProviders() async {
     try {
-      final mmkv = MMKV.defaultMMKV();
-      final jsonStr = mmkv?.decodeString(_KEY_AI_PROVIDERS);
-      final activeId = mmkv?.decodeString(_KEY_ACTIVE_PROVIDER_ID);
-
-      if (jsonStr != null && jsonStr.isNotEmpty) {
-        final List<dynamic> jsonList = json.decode(jsonStr);
-        state = jsonList
-            .map((json) => AIProviderConfig.fromJson(json))
-            .map((config) =>
-                config.copyWith(isActive: config.id == activeId))
-            .toList();
-      }
+      _storage.migrateLegacyIfNeeded(_KEY_AI_PROVIDERS);
+      state = _storage.loadProviders();
     } catch (e) {
       print('加载 AI 配置失败: $e');
       state = [];
@@ -55,15 +46,7 @@ class AIProviderManager extends StateNotifier<List<AIProviderConfig>> {
   /// 保存配置到本地
   Future<void> _saveProviders() async {
     try {
-      final mmkv = MMKV.defaultMMKV();
-      final jsonStr = json.encode(state.map((p) => p.toJson()).toList());
-      mmkv?.encodeString(_KEY_AI_PROVIDERS, jsonStr);
-
-      // 保存激活的配置 ID
-      final activeProvider = state.where((p) => p.isActive).firstOrNull;
-      if (activeProvider != null) {
-        mmkv?.encodeString(_KEY_ACTIVE_PROVIDER_ID, activeProvider.id);
-      }
+      _storage.saveProviders(state);
     } catch (e) {
       print('保存 AI 配置失败: $e');
     }
@@ -129,6 +112,6 @@ class AIProviderManager extends StateNotifier<List<AIProviderConfig>> {
   /// 清空所有配置
   Future<void> clearAll() async {
     state = [];
-    await _saveProviders();
+    _storage.clear();
   }
 }

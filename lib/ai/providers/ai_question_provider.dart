@@ -1,8 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/constants.dart';
+import '../models/ai_contract.dart';
+import '../models/ai_request_status.dart';
 import '../providers/ai_provider_manager.dart';
 import '../providers/user_context_provider.dart';
-import '../services/ai_service.dart';
+import '../services/ai_client.dart';
+import '../services/ai_message_composer.dart';
 
 /// 单个问答的 AI 解析状态
 class QuestionAIState {
@@ -10,12 +14,14 @@ class QuestionAIState {
   final bool isLoading;
   final bool isCompleted;
   final String? error;
+  final AIRequestStatus status;
 
   const QuestionAIState({
     this.content = '',
     this.isLoading = false,
     this.isCompleted = false,
     this.error,
+    this.status = AIRequestStatus.idle,
   });
 
   QuestionAIState copyWith({
@@ -23,12 +29,14 @@ class QuestionAIState {
     bool? isLoading,
     bool? isCompleted,
     String? error,
+    AIRequestStatus? status,
   }) {
     return QuestionAIState(
       content: content ?? this.content,
       isLoading: isLoading ?? this.isLoading,
       isCompleted: isCompleted ?? this.isCompleted,
       error: error ?? this.error,
+      status: status ?? this.status,
     );
   }
 }
@@ -39,7 +47,7 @@ class QuestionAIState {
 /// key 为 article.id。
 class AIQuestionNotifier extends StateNotifier<Map<int, QuestionAIState>> {
   final Ref _ref;
-  AIService? _aiService;
+  AIClient? _aiClient;
 
   AIQuestionNotifier(this._ref) : super({});
 
@@ -58,25 +66,25 @@ class AIQuestionNotifier extends StateNotifier<Map<int, QuestionAIState>> {
     if (config == null) {
       state = {
         ...state,
-        articleId: const QuestionAIState(error: '请先配置 AI 服务'),
+        articleId: const QuestionAIState(error: '请先配置 AI 服务', status: AIRequestStatus.error),
       };
       return;
     }
 
     // 初始化 AI 服务
-    _aiService = AIService(config);
+    _aiClient = AIClient(config);
 
     // 设置加载状态
     state = {
       ...state,
-      articleId: const QuestionAIState(isLoading: true),
+      articleId: const QuestionAIState(isLoading: true, status: AIRequestStatus.loading),
     };
 
     // 获取用户上下文（如果有）
     final userContext = _ref.read(userContextProvider.notifier).promptSummary;
 
     // 构建消息
-    final messages = AIService.buildQuestionExplanationMessages(
+    final messages = AIMessageComposer.questionExplain(
       title: title,
       description: description,
       userContext: userContext,
@@ -88,33 +96,78 @@ class AIQuestionNotifier extends StateNotifier<Map<int, QuestionAIState>> {
     const updateInterval = 3;
 
     try {
-      final stream = _aiService!.sendChatStream(messages: messages);
+      final stream = _aiClient!.sendStream(
+        scene: 'daily_question_explanation',
+        messages: messages,
+        maxRetries: 1,
+        metadata: {
+          'articleId': articleId,
+          'title': title,
+        },
+      );
 
-      await for (final chunk in stream) {
-        responseBuffer.write(chunk);
-        updateCounter++;
+      await for (final event in stream) {
+        switch (event.type) {
+          case AIStreamEventType.deltaText:
+            if (event.deltaText == null || event.deltaText!.isEmpty) {
+              continue;
+            }
+            responseBuffer.write(event.deltaText!);
+            updateCounter++;
 
-        if (updateCounter >= updateInterval) {
-          state = {
-            ...state,
-            articleId: QuestionAIState(
-              content: responseBuffer.toString(),
-              isLoading: true,
-            ),
-          };
-          updateCounter = 0;
+            if (updateCounter >= updateInterval) {
+              state = {
+                ...state,
+                articleId: QuestionAIState(
+                  content: responseBuffer.toString(),
+                  isLoading: true,
+                  status: AIRequestStatus.loading,
+                ),
+              };
+              updateCounter = 0;
+            }
+            break;
+          case AIStreamEventType.completed:
+            state = {
+              ...state,
+              articleId: QuestionAIState(
+                content: event.response?.content ?? responseBuffer.toString(),
+                isLoading: false,
+                isCompleted: true,
+                status: AIRequestStatus.completed,
+              ),
+            };
+            break;
+          case AIStreamEventType.retrying:
+            state = {
+              ...state,
+              articleId: QuestionAIState(
+                content: responseBuffer.toString(),
+                isLoading: true,
+                error: event.error?.message,
+                status: AIRequestStatus.retrying,
+              ),
+            };
+            break;
+          case AIStreamEventType.failed:
+          case AIStreamEventType.cancelled:
+            state = {
+              ...state,
+              articleId: QuestionAIState(
+                content: responseBuffer.toString(),
+                isLoading: false,
+                error: event.error?.message ?? AIConstants.errorUnknown,
+                status: _mapErrorToStatus(event.error),
+              ),
+            };
+            break;
+          case AIStreamEventType.started:
+          case AIStreamEventType.toolCallRequested:
+          case AIStreamEventType.toolCallResult:
+          case AIStreamEventType.usageUpdated:
+            break;
         }
       }
-
-      // 最终更新
-      state = {
-        ...state,
-        articleId: QuestionAIState(
-          content: responseBuffer.toString(),
-          isLoading: false,
-          isCompleted: true,
-        ),
-      };
     } catch (e) {
       debugPrint('AI 问答解析失败: $e');
       state = {
@@ -123,6 +176,7 @@ class AIQuestionNotifier extends StateNotifier<Map<int, QuestionAIState>> {
           content: responseBuffer.toString(),
           isLoading: false,
           error: e.toString(),
+          status: AIRequestStatus.error,
         ),
       };
     }
@@ -130,7 +184,7 @@ class AIQuestionNotifier extends StateNotifier<Map<int, QuestionAIState>> {
 
   /// 取消当前请求
   void cancelRequest() {
-    _aiService?.cancelCurrentRequest();
+    _aiClient?.cancelCurrentRequest();
   }
 
   /// 清除某个问答的解析状态（用于重试）
@@ -138,6 +192,19 @@ class AIQuestionNotifier extends StateNotifier<Map<int, QuestionAIState>> {
     final newState = Map<int, QuestionAIState>.from(state);
     newState.remove(articleId);
     state = newState;
+  }
+
+  AIRequestStatus _mapErrorToStatus(AIErrorInfo? error) {
+    switch (error?.type) {
+      case AIErrorType.timeout:
+        return AIRequestStatus.timedOut;
+      case AIErrorType.rateLimited:
+        return AIRequestStatus.rateLimited;
+      case AIErrorType.cancelled:
+        return AIRequestStatus.cancelled;
+      default:
+        return AIRequestStatus.error;
+    }
   }
 }
 

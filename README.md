@@ -212,6 +212,16 @@
 - 支持笔记场景下的 AI 续写与 AI 润色
 - 支持针对不同内容平台的文章正文抽取策略，便于 AI 获取干净语料
 
+### AI 工程化增强
+
+- 统一 AI 运行入口：`AIClient`
+- 场景级运行策略：首 token 超时、总超时、重试、缓存策略
+- 统一 Prompt 组织：`AIMessageComposer` + `AIPromptManager` + `AIContextManager`
+- 结构化输出校验：`AISchemaCatalog` + `AIResponseValidator` + repair 流程
+- 统一事件流模型：支持 `started / delta / retrying / completed / failed / cancelled`
+- 本地 AI Diagnostics：记录 scene、provider、model、latency、retry、cache hit、schema 校验结果
+- Provider 配置存储拆分：元数据与 API Key 分离存储，降低配置 JSON 直接暴露敏感字段的风险
+
 ---
 
 ## 使用场景
@@ -393,6 +403,19 @@ lib/
 - 支持流式输出与历史压缩
 
 对应的 `AIProviderManager` 则负责多服务商配置的本地持久化与激活切换。
+
+目前 AI 模块已经进一步拆成更清晰的工程层次：
+
+- `AIClient`
+  负责运行策略、重试、超时、缓存、诊断
+- `AIMessageComposer`
+  负责不同场景的消息拼装
+- `AIPromptManager` / `AIContextManager`
+  负责 prompt 版本、上下文裁剪、敏感信息处理
+- `AISchemaCatalog` / `AIResponseValidator`
+  负责结构化输出的 schema 校验与 repair 前置检查
+- `OpenAISSEParser`
+  负责流式 SSE chunk 的独立解析与测试覆盖
 
 ### 4. 内容抽取与平台策略
 

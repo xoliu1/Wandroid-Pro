@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:wanandroid_pro/ai/models/ai_provider_config.dart';
 import 'package:wanandroid_pro/ai/providers/ai_provider_manager.dart';
+import 'package:wanandroid_pro/ai/services/ai_message_composer.dart';
 import 'package:wanandroid_pro/ai/services/ai_service.dart';
 import 'package:wanandroid_pro/ai/ui/ai_provider_management_page.dart';
 import 'package:wanandroid_pro/model/note.dart';
@@ -508,9 +509,9 @@ class _NoteEditorV2State extends ConsumerState<NoteEditorV2>
     });
 
     try {
-      final messages = AIService.buildContinueWritingMessages(
-        existingContent: content,
-        selectedText: selectedText,
+        final messages = AIMessageComposer.continueWriting(
+          existingContent: content,
+          selectedText: selectedText,
       );
 
       final aiService = AIService(config);
@@ -588,7 +589,7 @@ class _NoteEditorV2State extends ConsumerState<NoteEditorV2>
     });
 
     try {
-      final messages = AIService.buildPolishMessages(content: textToPolish);
+        final messages = AIMessageComposer.polish(content: textToPolish);
 
       final aiService = AIService(config);
       final responseBuffer = StringBuffer();

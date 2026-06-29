@@ -2,9 +2,17 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:wanandroid_pro/ai/core/constants.dart';
+import 'package:wanandroid_pro/ai/core/diagnostics.dart';
+import 'package:wanandroid_pro/ai/core/result.dart' as ai_result;
+import 'package:wanandroid_pro/ai/models/ai_contract.dart';
+import 'package:wanandroid_pro/ai/models/ai_request_status.dart';
 import 'package:wanandroid_pro/ai/providers/ai_provider_manager.dart';
 import 'package:wanandroid_pro/ai/providers/user_context_provider.dart';
-import 'package:wanandroid_pro/ai/services/ai_service.dart';
+import 'package:wanandroid_pro/ai/services/ai_client.dart';
+import 'package:wanandroid_pro/ai/services/ai_message_composer.dart';
+import 'package:wanandroid_pro/ai/services/ai_response_validator.dart';
+import 'package:wanandroid_pro/ai/services/ai_schema_catalog.dart';
 import 'package:wanandroid_pro/ai/services/browsing_history_db.dart';
 import 'package:wanandroid_pro/local/KV.dart';
 import 'package:wanandroid_pro/model/db/sqflite.dart';
@@ -307,6 +315,7 @@ class AIWeeklyReportState {
   final bool isCompleted;
   final WeeklyReport? report;
   final String? error;
+  final AIRequestStatus status;
 
   const AIWeeklyReportState({
     this.isLoading = false,
@@ -314,6 +323,7 @@ class AIWeeklyReportState {
     this.isCompleted = false,
     this.report,
     this.error,
+    this.status = AIRequestStatus.idle,
   });
 
   AIWeeklyReportState copyWith({
@@ -323,6 +333,7 @@ class AIWeeklyReportState {
     WeeklyReport? report,
     String? error,
     bool clearError = false,
+    AIRequestStatus? status,
   }) {
     return AIWeeklyReportState(
       isLoading: isLoading ?? this.isLoading,
@@ -330,6 +341,7 @@ class AIWeeklyReportState {
       isCompleted: isCompleted ?? this.isCompleted,
       report: report ?? this.report,
       error: clearError ? null : (error ?? this.error),
+      status: status ?? this.status,
     );
   }
 }
@@ -347,7 +359,7 @@ final weeklyReportHistoryProvider = StateProvider<List<WeeklyReportRecord>>((ref
 
 class AIWeeklyReportNotifier extends StateNotifier<AIWeeklyReportState> {
   final Ref _ref;
-  AIService? _aiService;
+  AIClient? _aiClient;
 
   AIWeeklyReportNotifier(this._ref) : super(const AIWeeklyReportState());
 
@@ -367,6 +379,7 @@ class AIWeeklyReportNotifier extends StateNotifier<AIWeeklyReportState> {
           isCompleted: true,
           rawContent: cached.rawJson,
           report: cached.report,
+          status: AIRequestStatus.completed,
         );
         return;
       }
@@ -375,11 +388,17 @@ class AIWeeklyReportNotifier extends StateNotifier<AIWeeklyReportState> {
     // 检查 AI 配置
     final activeProvider = _ref.read(activeAIProviderProvider);
     if (activeProvider == null) {
-      state = state.copyWith(error: '请先配置 AI 服务');
+      state = state.copyWith(
+        error: '请先配置 AI 服务',
+        status: AIRequestStatus.error,
+      );
       return;
     }
 
-    state = const AIWeeklyReportState(isLoading: true);
+    state = const AIWeeklyReportState(
+      isLoading: true,
+      status: AIRequestStatus.loading,
+    );
 
     try {
       // 1. 采集本周活动数据
@@ -393,6 +412,7 @@ class AIWeeklyReportNotifier extends StateNotifier<AIWeeklyReportState> {
             weekRange: getCurrentWeekRange(),
             nextWeekGoals: ['去首页浏览推荐文章', '整理一下待办事项'],
           ),
+          status: AIRequestStatus.completed,
         );
         return;
       }
@@ -401,46 +421,123 @@ class AIWeeklyReportNotifier extends StateNotifier<AIWeeklyReportState> {
       final userContext = _ref.read(userContextProvider.notifier).promptSummary;
 
       // 3. 构建消息
-      final messages = _buildWeeklyReportMessages(
+      final messages = AIMessageComposer.weeklyReport(
         weeklyData: weeklyData,
+        weekRange: getCurrentWeekRange(),
         userContext: userContext,
       );
 
       // 4. 流式请求
-      _aiService = AIService(activeProvider);
-      final stream = _aiService!.sendChatStream(messages: messages);
+      _aiClient = AIClient(activeProvider);
+      final stream = _aiClient!.sendStream(
+        scene: 'weekly_report',
+        messages: messages,
+        maxRetries: 1,
+      );
 
       final buffer = StringBuffer();
-      await for (final chunk in stream) {
-        buffer.write(chunk);
-        if (mounted) {
-          state = state.copyWith(rawContent: buffer.toString());
+      await for (final event in stream) {
+        switch (event.type) {
+          case AIStreamEventType.deltaText:
+            if (event.deltaText == null || event.deltaText!.isEmpty) {
+              continue;
+            }
+            buffer.write(event.deltaText!);
+            if (mounted) {
+              state = state.copyWith(
+                rawContent: buffer.toString(),
+                status: AIRequestStatus.loading,
+              );
+            }
+            break;
+          case AIStreamEventType.retrying:
+            if (mounted) {
+              state = state.copyWith(
+                isLoading: true,
+                error: event.error?.message,
+                status: AIRequestStatus.retrying,
+              );
+            }
+            break;
+          case AIStreamEventType.completed:
+            if (mounted) {
+              final rawJson = event.response?.content ?? buffer.toString();
+              var report = _parseReport(rawJson);
+              if (report.overview == '生成失败，请重试') {
+                AIDiagnosticsStore.instance.record(
+                  scene: 'weekly_report',
+                  level: 'warning',
+                  message: 'structured validation failed',
+                  metadata: {
+                    'schemaVersion': AISchemaCatalog.weeklyReport.fullName,
+                  },
+                );
+                final repaired = await _aiClient!.repairStructuredJson<WeeklyReport>(
+                  scene: 'weekly_report',
+                  originalMessages: messages,
+                  invalidOutput: rawJson,
+                  validator: _validateReportResult,
+                  repairInstruction:
+                      '返回格式必须为包含 ${AISchemaCatalog.weeklyReport.requiredKeys.join('、')} 字段的合法 JSON 对象。',
+                );
+                switch (repaired) {
+                  case ai_result.Success(data: final repairedReport):
+                    report = repairedReport;
+                  case ai_result.Failure():
+                    break;
+                }
+              }
+
+              AIDiagnosticsStore.instance.record(
+                scene: 'weekly_report',
+                level: report.overview != '生成失败，请重试' ? 'success' : 'error',
+                message: report.overview != '生成失败，请重试'
+                    ? 'structured validation succeeded'
+                    : 'structured validation failed after repair',
+                metadata: {
+                  'schemaVersion': AISchemaCatalog.weeklyReport.fullName,
+                },
+              );
+
+              if (report.overview != '生成失败，请重试') {
+                final record = WeeklyReportRecord(
+                  weekKey: weekKey,
+                  weekRange: getCurrentWeekRange(),
+                  generatedAt: DateTime.now().toIso8601String(),
+                  rawJson: rawJson,
+                  report: report,
+                );
+                saveWeeklyReport(record);
+                _ref.read(weeklyReportHistoryProvider.notifier).state = getWeeklyReportHistory();
+              }
+
+              state = state.copyWith(
+                isLoading: false,
+                isCompleted: true,
+                rawContent: rawJson,
+                report: report,
+                status: report.overview != '生成失败，请重试'
+                    ? AIRequestStatus.completed
+                    : AIRequestStatus.error,
+              );
+            }
+            break;
+          case AIStreamEventType.failed:
+          case AIStreamEventType.cancelled:
+            if (mounted) {
+              state = state.copyWith(
+                isLoading: false,
+                error: event.error?.message ?? AIConstants.errorUnknown,
+                status: _mapErrorToStatus(event.error),
+              );
+            }
+            break;
+          case AIStreamEventType.started:
+          case AIStreamEventType.toolCallRequested:
+          case AIStreamEventType.toolCallResult:
+          case AIStreamEventType.usageUpdated:
+            break;
         }
-      }
-
-      // 5. 解析 JSON 并持久化
-      if (mounted) {
-        final rawJson = buffer.toString();
-        final report = _parseReport(rawJson);
-
-        if (report.overview != '生成失败，请重试') {
-          final record = WeeklyReportRecord(
-            weekKey: weekKey,
-            weekRange: getCurrentWeekRange(),
-            generatedAt: DateTime.now().toIso8601String(),
-            rawJson: rawJson,
-            report: report,
-          );
-          saveWeeklyReport(record);
-          // 刷新历史列表
-          _ref.read(weeklyReportHistoryProvider.notifier).state = getWeeklyReportHistory();
-        }
-
-        state = state.copyWith(
-          isLoading: false,
-          isCompleted: true,
-          report: report,
-        );
       }
     } catch (e) {
       debugPrint('📊 周报生成失败: $e');
@@ -448,6 +545,7 @@ class AIWeeklyReportNotifier extends StateNotifier<AIWeeklyReportState> {
         state = state.copyWith(
           isLoading: false,
           error: '生成失败: ${e.toString().length > 100 ? '${e.toString().substring(0, 100)}...' : e}',
+          status: AIRequestStatus.error,
         );
       }
     }
@@ -455,27 +553,56 @@ class AIWeeklyReportNotifier extends StateNotifier<AIWeeklyReportState> {
 
   /// 解析 AI 返回的 JSON
   WeeklyReport _parseReport(String raw) {
+    final result = _validateReportResult(raw);
+    switch (result) {
+      case ai_result.Success(data: final report):
+        return report;
+      case ai_result.Failure():
+        break;
+    }
+    final error = switch (result) {
+      ai_result.Failure(error: final error) => error,
+      ai_result.Success() => null,
+    };
+    debugPrint('📊 周报 JSON 解析失败: $error');
+    return WeeklyReport(
+      overview: raw.isNotEmpty ? '周报已生成（显示原始内容）' : '生成失败，请重试',
+      weekRange: getCurrentWeekRange(),
+      nextWeekGoals: [],
+    );
+  }
+
+  ai_result.Result<WeeklyReport> _validateReportResult(String raw) {
     try {
-      var cleaned = raw.trim();
-      if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replaceFirst(RegExp(r'^```[a-z]*\n?'), '');
-        cleaned = cleaned.replaceFirst(RegExp(r'\n?```$'), '');
-      }
-      final json = jsonDecode(cleaned) as Map<String, dynamic>;
-      return WeeklyReport.fromJson(json);
+      return AIResponseValidator.validateJsonObject(
+        raw: raw,
+        parser: WeeklyReport.fromJson,
+        schema: AISchemaCatalog.weeklyReport,
+      );
     } catch (e) {
       debugPrint('📊 周报 JSON 解析失败: $e');
-      return WeeklyReport(
-        overview: raw.isNotEmpty ? '周报已生成（显示原始内容）' : '生成失败，请重试',
-        weekRange: getCurrentWeekRange(),
-        nextWeekGoals: [],
+      return ai_result.Failure(
+        ai_result.ParseException('周报校验失败: $e', originalError: e),
       );
     }
   }
 
   void reset() {
-    _aiService?.cancelCurrentRequest();
+    _aiClient?.cancelCurrentRequest();
     state = const AIWeeklyReportState();
+  }
+
+  AIRequestStatus _mapErrorToStatus(AIErrorInfo? error) {
+    switch (error?.type) {
+      case AIErrorType.timeout:
+        return AIRequestStatus.timedOut;
+      case AIErrorType.rateLimited:
+        return AIRequestStatus.rateLimited;
+      case AIErrorType.cancelled:
+        return AIRequestStatus.cancelled;
+      default:
+        return AIRequestStatus.error;
+    }
   }
 
   /// 采集本周活动数据
@@ -678,77 +805,9 @@ class AIWeeklyReportNotifier extends StateNotifier<AIWeeklyReportState> {
     }
   }
 
-  /// 构建周报 AI 消息
-  List<Map<String, String>> _buildWeeklyReportMessages({
-    required String weeklyData,
-    String? userContext,
-  }) {
-    final messages = <Map<String, String>>[];
-    final weekRange = getCurrentWeekRange();
-
-    final systemPrompt = StringBuffer();
-    systemPrompt.writeln('你是一个贴心的个人效率助手，负责为用户生成每周学习成长报告。');
-    systemPrompt.writeln('请根据用户本周的活动数据，生成一份结构化的周报。');
-    systemPrompt.writeln();
-    systemPrompt.writeln('**重要**：你必须严格按照以下 JSON 格式返回结果，不要输出任何其他内容（不要输出 markdown 代码块标记）：');
-    systemPrompt.writeln();
-    systemPrompt.writeln('''{
-  "overview": "用 2-3 句话总结本周的整体学习情况（必填）",
-  "week_range": "$weekRange",
-  "reading": {
-    "summary": "本周阅读主题和趋势的总结",
-    "items": ["重点文章1", "重点文章2"],
-    "total_count": 0,
-    "total_minutes": 0
-  },
-  "todos": {
-    "summary": "本周任务完成情况总结",
-    "completed_count": 0,
-    "pending_count": 0,
-    "highlights": ["重要完成的任务1", "重要完成的任务2"]
-  },
-  "notes": {
-    "summary": "本周笔记主题总结",
-    "total_count": 0,
-    "topics": ["笔记主题1", "笔记主题2"]
-  },
-  "growth": {
-    "assessment": "对本周学习成长的整体评价",
-    "score": 7,
-    "strengths": ["做得好的方面1", "做得好的方面2"],
-    "improvements": ["可以改进的方面1"]
-  },
-  "next_week_goals": ["下周目标1", "下周目标2", "下周目标3"]
-}''');
-    systemPrompt.writeln();
-    systemPrompt.writeln('规则：');
-    systemPrompt.writeln('1. 如果某个板块没有数据，对应字段设为 null');
-    systemPrompt.writeln('2. growth.score 范围 1-10，根据活跃度和学习深度评分');
-    systemPrompt.writeln('3. next_week_goals 给出 2-3 条具体可执行的目标');
-    systemPrompt.writeln('4. 语气亲切自然，像朋友一样鼓励用户');
-    systemPrompt.writeln('5. 只输出 JSON，不要有任何其他文字');
-
-    if (userContext != null && userContext.isNotEmpty) {
-      systemPrompt.writeln('\n以下是用户的背景信息，可以据此让总结更个性化：');
-      systemPrompt.writeln(userContext);
-    }
-
-    messages.add({
-      'role': 'system',
-      'content': systemPrompt.toString(),
-    });
-
-    messages.add({
-      'role': 'user',
-      'content': '请根据以下本周活动数据，生成我的周报总结：\n\n$weeklyData',
-    });
-
-    return messages;
-  }
-
   @override
   void dispose() {
-    _aiService?.cancelCurrentRequest();
+    _aiClient?.cancelCurrentRequest();
     super.dispose();
   }
 }

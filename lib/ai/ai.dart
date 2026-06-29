@@ -10,6 +10,9 @@
 export 'models/blog_platform.dart';
 export 'models/article_content.dart';
 export 'models/ai_provider_config.dart';
+export 'models/ai_provider_capability.dart';
+export 'models/ai_contract.dart';
+export 'models/ai_request_status.dart';
 export 'models/chat_message.dart';
 
 // 服务
@@ -21,6 +24,14 @@ export 'services/weixin_strategy.dart';
 export 'services/generic_strategy.dart';
 export 'services/ai_test_service.dart';
 export 'services/ai_service.dart';
+export 'services/ai_client.dart';
+export 'services/ai_message_composer.dart';
+export 'services/ai_prompt_manager.dart';
+export 'services/ai_response_validator.dart';
+export 'services/ai_runtime_policy.dart';
+export 'services/ai_provider_storage.dart';
+export 'services/ai_schema_catalog.dart';
+export 'repositories/openai_sse_parser.dart';
 
 // Providers
 export 'providers/ai_provider_manager.dart';
@@ -33,3 +44,4 @@ export 'ui/extracted_content_page.dart';
 export 'ui/ai_provider_management_page.dart';
 export 'ui/ai_provider_edit_page.dart';
 export 'ui/ai_chat_panel.dart';
+export 'ui/ai_diagnostics_page.dart';

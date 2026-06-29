@@ -4,6 +4,10 @@ import 'package:flutter/foundation.dart';
 class AILogger {
   static const String _tag = 'AI_MODULE';
   static bool _enableDebugLog = kDebugMode;
+  static final List<RegExp> _secretPatterns = [
+    RegExp(r'Bearer\s+[A-Za-z0-9._\-]+', caseSensitive: false),
+    RegExp(r'sk-[A-Za-z0-9]+', caseSensitive: false),
+  ];
 
   /// 设置是否启用调试日志
   static void setDebugEnabled(bool enabled) {
@@ -46,6 +50,22 @@ class AILogger {
   /// 内部日志方法
   static void _log(String emoji, String tag, String message) {
     final timestamp = DateTime.now().toIso8601String().substring(11, 23);
-    debugPrint('$emoji [$timestamp][$tag] $message');
+    debugPrint('$emoji [$timestamp][$tag] ${sanitize(message)}');
+  }
+
+  static String sanitize(String message) {
+    var sanitized = message;
+    for (final pattern in _secretPatterns) {
+      sanitized = sanitized.replaceAllMapped(pattern, (_) => '[REDACTED]');
+    }
+    return sanitized;
+  }
+
+  static String previewText(String message, {int maxChars = 80}) {
+    final singleLine = message.replaceAll(RegExp(r'\s+'), ' ').trim();
+    final truncated = singleLine.length > maxChars
+        ? '${singleLine.substring(0, maxChars)}...'
+        : singleLine;
+    return sanitize(truncated);
   }
 }

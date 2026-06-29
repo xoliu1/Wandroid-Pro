@@ -2,9 +2,17 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:wanandroid_pro/ai/core/constants.dart';
+import 'package:wanandroid_pro/ai/core/diagnostics.dart';
+import 'package:wanandroid_pro/ai/core/result.dart' as ai_result;
+import 'package:wanandroid_pro/ai/models/ai_contract.dart';
+import 'package:wanandroid_pro/ai/models/ai_request_status.dart';
 import 'package:wanandroid_pro/ai/providers/ai_provider_manager.dart';
 import 'package:wanandroid_pro/ai/providers/user_context_provider.dart';
-import 'package:wanandroid_pro/ai/services/ai_service.dart';
+import 'package:wanandroid_pro/ai/services/ai_client.dart';
+import 'package:wanandroid_pro/ai/services/ai_message_composer.dart';
+import 'package:wanandroid_pro/ai/services/ai_response_validator.dart';
+import 'package:wanandroid_pro/ai/services/ai_schema_catalog.dart';
 import 'package:wanandroid_pro/ai/services/browsing_history_db.dart';
 import 'package:wanandroid_pro/local/KV.dart';
 import 'package:wanandroid_pro/model/db/sqflite.dart';
@@ -119,6 +127,7 @@ class AIDailyReportState {
   final bool isCompleted;
   final DailyReport? report; // 解析后的结构化数据
   final String? error;
+  final AIRequestStatus status;
 
   const AIDailyReportState({
     this.isLoading = false,
@@ -126,6 +135,7 @@ class AIDailyReportState {
     this.isCompleted = false,
     this.report,
     this.error,
+    this.status = AIRequestStatus.idle,
   });
 
   AIDailyReportState copyWith({
@@ -134,6 +144,7 @@ class AIDailyReportState {
     bool? isCompleted,
     DailyReport? report,
     String? error,
+    AIRequestStatus? status,
   }) {
     return AIDailyReportState(
       isLoading: isLoading ?? this.isLoading,
@@ -141,6 +152,7 @@ class AIDailyReportState {
       isCompleted: isCompleted ?? this.isCompleted,
       report: report ?? this.report,
       error: error ?? this.error,
+      status: status ?? this.status,
     );
   }
 }
@@ -153,7 +165,7 @@ final aiDailyReportProvider =
 
 class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
   final Ref _ref;
-  AIService? _aiService;
+  AIClient? _aiClient;
 
   AIDailyReportNotifier(this._ref) : super(const AIDailyReportState());
 
@@ -171,6 +183,7 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
           isCompleted: true,
           rawContent: cached,
           report: report,
+          status: AIRequestStatus.completed,
         );
         return;
       }
@@ -179,11 +192,17 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
     // 检查 AI 配置
     final activeProvider = _ref.read(activeAIProviderProvider);
     if (activeProvider == null) {
-      state = state.copyWith(error: '请先配置 AI 服务');
+      state = state.copyWith(
+        error: '请先配置 AI 服务',
+        status: AIRequestStatus.error,
+      );
       return;
     }
 
-    state = const AIDailyReportState(isLoading: true);
+    state = const AIDailyReportState(
+      isLoading: true,
+      status: AIRequestStatus.loading,
+    );
 
     try {
       // 1. 采集今日活动数据
@@ -196,6 +215,7 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
             overview: '今天还没有浏览文章、完成任务或编辑笔记，去看看有什么有趣的文章吧！ 🚀',
             suggestions: ['去首页浏览今日推荐文章', '整理一下待办事项'],
           ),
+          status: AIRequestStatus.completed,
         );
         return;
       }
@@ -204,36 +224,111 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
       final userContext = _ref.read(userContextProvider.notifier).promptSummary;
 
       // 3. 构建消息
-      final messages = AIService.buildDailyReportMessages(
+      final messages = AIMessageComposer.dailyReport(
         dailyData: dailyData,
         userContext: userContext,
       );
 
       // 4. 流式请求（收集完整 JSON 后解析）
-      _aiService = AIService(activeProvider);
-      final stream = _aiService!.sendChatStream(messages: messages);
+      _aiClient = AIClient(activeProvider);
+      final stream = _aiClient!.sendStream(
+        scene: 'daily_report',
+        messages: messages,
+        maxRetries: 1,
+      );
 
       final buffer = StringBuffer();
-      await for (final chunk in stream) {
-        buffer.write(chunk);
-        if (mounted) {
-          state = state.copyWith(rawContent: buffer.toString());
+      await for (final event in stream) {
+        switch (event.type) {
+          case AIStreamEventType.deltaText:
+            if (event.deltaText == null || event.deltaText!.isEmpty) {
+              continue;
+            }
+            buffer.write(event.deltaText!);
+            if (mounted) {
+              state = state.copyWith(
+                rawContent: buffer.toString(),
+                status: AIRequestStatus.loading,
+              );
+            }
+            break;
+          case AIStreamEventType.retrying:
+            if (mounted) {
+              state = state.copyWith(
+                isLoading: true,
+                error: event.error?.message,
+                status: AIRequestStatus.retrying,
+              );
+            }
+            break;
+          case AIStreamEventType.completed:
+            if (mounted) {
+              final rawJson = event.response?.content ?? buffer.toString();
+              var report = _parseReport(rawJson);
+              if (report.overview == '生成失败，请重试') {
+                AIDiagnosticsStore.instance.record(
+                  scene: 'daily_report',
+                  level: 'warning',
+                  message: 'structured validation failed',
+                  metadata: {
+                    'schemaVersion': AISchemaCatalog.dailyReport.fullName,
+                  },
+                );
+                final repaired = await _aiClient!.repairStructuredJson<DailyReport>(
+                  scene: 'daily_report',
+                  originalMessages: messages,
+                  invalidOutput: rawJson,
+                  validator: _validateReportResult,
+                  repairInstruction:
+                      '返回格式必须为包含 ${AISchemaCatalog.dailyReport.requiredKeys.join('、')} 等字段的合法 JSON 对象。',
+                );
+                switch (repaired) {
+                  case ai_result.Success(data: final repairedReport):
+                    report = repairedReport;
+                  case ai_result.Failure():
+                    break;
+                }
+              }
+              AIDiagnosticsStore.instance.record(
+                scene: 'daily_report',
+                level: report.overview != '生成失败，请重试' ? 'success' : 'error',
+                message: report.overview != '生成失败，请重试'
+                    ? 'structured validation succeeded'
+                    : 'structured validation failed after repair',
+                metadata: {
+                  'schemaVersion': AISchemaCatalog.dailyReport.fullName,
+                },
+              );
+              if (report.overview != '生成失败，请重试') {
+                saveDailyReport(rawJson);
+              }
+              state = state.copyWith(
+                isLoading: false,
+                isCompleted: true,
+                rawContent: rawJson,
+                report: report,
+                status: report.overview != '生成失败，请重试'
+                    ? AIRequestStatus.completed
+                    : AIRequestStatus.error,
+              );
+            }
+            break;
+          case AIStreamEventType.failed:
+          case AIStreamEventType.cancelled:
+            if (mounted) {
+              state = state.copyWith(
+                isLoading: false,
+                error: event.error?.message ?? AIConstants.errorUnknown,
+                status: _mapErrorToStatus(event.error),
+              );
+            }
+            break;
+          case AIStreamEventType.started:
+          case AIStreamEventType.toolCallRequested:
+          case AIStreamEventType.toolCallResult:
+          case AIStreamEventType.usageUpdated:
+            break;
         }
-      }
-
-      // 5. 解析 JSON 并缓存
-      if (mounted) {
-        final rawJson = buffer.toString();
-        final report = _parseReport(rawJson);
-        // 解析成功才缓存
-        if (report.overview != '生成失败，请重试') {
-          saveDailyReport(rawJson);
-        }
-        state = state.copyWith(
-          isLoading: false,
-          isCompleted: true,
-          report: report,
-        );
       }
     } catch (e) {
       debugPrint('📊 日报生成失败: $e');
@@ -241,6 +336,7 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
         state = state.copyWith(
           isLoading: false,
           error: '生成失败: ${e.toString().length > 100 ? '${e.toString().substring(0, 100)}...' : e}',
+          status: AIRequestStatus.error,
         );
       }
     }
@@ -248,29 +344,56 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
 
   /// 解析 AI 返回的 JSON 为结构化日报
   DailyReport _parseReport(String raw) {
+    final result = _validateReportResult(raw);
+    switch (result) {
+      case ai_result.Success(data: final report):
+        return report;
+      case ai_result.Failure():
+        break;
+    }
+    final error = switch (result) {
+      ai_result.Failure(error: final error) => error,
+      ai_result.Success() => null,
+    };
+    debugPrint('📊 日报 JSON 解析失败: $error');
+    return DailyReport(
+      overview: raw.isNotEmpty ? '日报已生成（显示原始内容）' : '生成失败，请重试',
+      suggestions: [],
+    );
+  }
+
+  ai_result.Result<DailyReport> _validateReportResult(String raw) {
     try {
-      // 清理可能的 markdown 代码块标记
-      var cleaned = raw.trim();
-      if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replaceFirst(RegExp(r'^```[a-z]*\n?'), '');
-        cleaned = cleaned.replaceFirst(RegExp(r'\n?```$'), '');
-      }
-      final json = jsonDecode(cleaned) as Map<String, dynamic>;
-      return DailyReport.fromJson(json);
+      return AIResponseValidator.validateJsonObject(
+        raw: raw,
+        parser: DailyReport.fromJson,
+        schema: AISchemaCatalog.dailyReport,
+      );
     } catch (e) {
       debugPrint('📊 日报 JSON 解析失败: $e, raw: $raw');
-      // 解析失败时返回一个包含原始内容的兜底报告
-      return DailyReport(
-        overview: raw.isNotEmpty ? '日报已生成（显示原始内容）' : '生成失败，请重试',
-        suggestions: [],
+      return ai_result.Failure(
+        ai_result.ParseException('日报校验失败: $e', originalError: e),
       );
     }
   }
 
   /// 重置状态
   void reset() {
-    _aiService?.cancelCurrentRequest();
+    _aiClient?.cancelCurrentRequest();
     state = const AIDailyReportState();
+  }
+
+  AIRequestStatus _mapErrorToStatus(AIErrorInfo? error) {
+    switch (error?.type) {
+      case AIErrorType.timeout:
+        return AIRequestStatus.timedOut;
+      case AIErrorType.rateLimited:
+        return AIRequestStatus.rateLimited;
+      case AIErrorType.cancelled:
+        return AIRequestStatus.cancelled;
+      default:
+        return AIRequestStatus.error;
+    }
   }
 
   /// 采集今日活动数据
@@ -479,7 +602,7 @@ class AIDailyReportNotifier extends StateNotifier<AIDailyReportState> {
 
   @override
   void dispose() {
-    _aiService?.cancelCurrentRequest();
+    _aiClient?.cancelCurrentRequest();
     super.dispose();
   }
 }

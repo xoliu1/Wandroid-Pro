@@ -8,6 +8,7 @@ import '../models/ai_provider_config.dart';
 import '../providers/ai_provider_manager.dart';
 import '../providers/ai_test_provider.dart';
 import '../../utils/platform_utils.dart';
+import 'ai_diagnostics_page.dart';
 import 'ai_provider_edit_page.dart';
 
 // ─── Mid-Century Modern 色彩体系 ───────────────────────────────────────────
@@ -530,10 +531,22 @@ class AIProviderManagementPage extends ConsumerWidget {
                 ],
               ),
             )),
-          ],
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const AIDiagnosticsPage(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.analytics_outlined, size: 18),
+              label: const Text('查看 AI Diagnostics'),
+            ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
   }
 
   // ── 添加配置菜单 ──────────────────────────────────────────────────────────
